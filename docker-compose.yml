@@ -1,0 +1,126 @@
+services:
+  greenscope:
+    build: .
+    container_name: greenscope
+    ports:
+      - "8002:8000"
+    environment:
+      - GREENSCOPE_PROMETHEUS_URL=http://greenscope-prometheus:9090
+      - GREENSCOPE_CARBON_INTENSITY_API_URL=https://api.carbonintensity.org.uk/intensity
+      - GREENSCOPE_CARBON_INTENSITY_FALLBACK=230.0
+      - GREENSCOPE_HOST_TDP_WATTS=205
+      - GREENSCOPE_HOST_CORES=2
+      - GREENSCOPE_HOST_PUE=1.2
+      - GREENSCOPE_HOST_EMBODIED_CO2_KG=1205.52
+      - GREENSCOPE_HOST_LIFESPAN_YEARS=4
+      - GREENSCOPE_APP_BOUNDARIES={"evm": ["evm-backend", "evm-frontend", "evm-db"], "equicalendar": ["compgather"], "meweb": ["caddy"]}
+      - GREENSCOPE_APP_REQUEST_JOBS={"evm": "evm-backend", "equicalendar": "compgather", "meweb": "caddy"}
+      - GREENSCOPE_CALCULATION_INTERVAL_MINUTES=15
+      - GREENSCOPE_DATABASE_URL=sqlite+aiosqlite:///data/greenscope.db
+      - GREENSCOPE_LOG_LEVEL=INFO
+    volumes:
+      - greenscope_data:/app/data
+    networks:
+      - web
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    depends_on:
+      greenscope-prometheus:
+        condition: service_healthy
+
+  greenscope-prometheus:
+    image: prom/prometheus:v2.50.0
+    container_name: greenscope-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - greenscope_prometheus_data:/prometheus
+    networks:
+      - web
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+  greenscope-grafana:
+    image: grafana/grafana:10.3.1
+    container_name: greenscope-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - greenscope_grafana_data:/var/lib/grafana
+    networks:
+      - web
+    depends_on:
+      greenscope-prometheus:
+        condition: service_healthy
+
+  greenscope-loki:
+    image: grafana/loki:3.0.0
+    container_name: greenscope-loki
+    command: -config.file=/etc/loki/loki-config.yml
+    volumes:
+      - ./observability/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - greenscope_loki_data:/loki
+    networks:
+      - web
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+  greenscope-promtail:
+    image: grafana/promtail:3.0.0
+    container_name: greenscope-promtail
+    command: -config.file=/etc/promtail/promtail-config.yml
+    volumes:
+      - ./observability/promtail/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - web
+    depends_on:
+      greenscope-loki:
+        condition: service_healthy
+
+  greenscope-cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: greenscope-cadvisor
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - web
+
+  greenscope-node-exporter:
+    image: prom/node-exporter:v1.7.0
+    container_name: greenscope-node-exporter
+    networks:
+      - web
+
+networks:
+  web:
+    driver: bridge
+
+volumes:
+  greenscope_data:
+  greenscope_prometheus_data:
+  greenscope_grafana_data:
+  greenscope_loki_data:
