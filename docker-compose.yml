@@ -13,8 +13,8 @@ services:
       - GREENSCOPE_HOST_PUE=1.2
       - GREENSCOPE_HOST_EMBODIED_CO2_KG=1205.52
       - GREENSCOPE_HOST_LIFESPAN_YEARS=4
-      - GREENSCOPE_APP_BOUNDARIES={"evm": ["evm-backend", "evm-frontend", "evm-db"], "equicalendar": ["compgather"], "meweb": ["caddy"]}
-      - GREENSCOPE_APP_REQUEST_JOBS={"evm": "evm-backend", "equicalendar": "compgather", "meweb": "caddy"}
+      - 'GREENSCOPE_APP_BOUNDARIES={"evm": ["evm-backend", "evm-frontend", "evm-db"], "equicalendar": ["compgather"], "meweb": ["caddy"]}'
+      - 'GREENSCOPE_APP_REQUEST_JOBS={"evm": "evm-backend", "equicalendar": "compgather", "meweb": "caddy"}'
       - GREENSCOPE_CALCULATION_INTERVAL_MINUTES=15
       - GREENSCOPE_DATABASE_URL=sqlite+aiosqlite:///data/greenscope.db
       - GREENSCOPE_LOG_LEVEL=INFO
