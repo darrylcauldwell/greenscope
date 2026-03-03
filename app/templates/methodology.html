@@ -51,15 +51,23 @@
     <section class="card rounded-lg p-6 mb-6">
         <h2 class="text-xl font-semibold mb-3">Carbon Intensity (I)</h2>
         <p class="text-sm mb-3" style="color: var(--text-secondary);">
-            Real-time marginal carbon intensity for the UK electricity grid is fetched from the
+            Real-time regional carbon intensity is fetched from the
             <a href="https://carbonintensity.org.uk/" class="underline" style="color: var(--green-accent);">UK Carbon Intensity API</a>,
             a free public API provided by National Grid ESO.
         </p>
+        <p class="text-sm mb-3" style="color: var(--text-secondary);">
+            Rather than using the national average, GreenScope queries the <strong>regional endpoint</strong> for the
+            specific grid region powering the datacenter. The dreamfold.dev infrastructure runs on DigitalOcean LON1,
+            which is physically hosted at Equinix LD5 in Slough (postcode {{ settings.datacenter_postcode }}),
+            falling in the <strong>SSE South</strong> distribution network region.
+        </p>
         <div class="text-sm space-y-1" style="color: var(--text-secondary);">
             <ul class="list-disc list-inside ml-2">
-                <li>Update frequency: every 30 minutes</li>
-                <li>Uses actual intensity when available, forecast otherwise</li>
-                <li>Fallback value: {{ settings.carbon_intensity_fallback }} gCO2eq/kWh (UK annual average) when API is unavailable</li>
+                <li>Datacenter postcode: <code>{{ settings.datacenter_postcode }}</code></li>
+                <li>Grid region: SSE South (South England)</li>
+                <li>Update frequency: every 30 minutes per half-hour settlement period</li>
+                <li>Includes electricity generation mix breakdown (wind, solar, gas, nuclear, etc.)</li>
+                <li>Fallback chain: regional → national → static ({{ settings.carbon_intensity_fallback }} gCO2eq/kWh UK average)</li>
             </ul>
         </div>
     </section>

@@ -11,9 +11,16 @@ from app.services.prometheus import PrometheusClient
 
 logger = logging.getLogger(__name__)
 
+# Latest carbon intensity metadata, updated each calculation cycle
+latest_carbon_info: dict = {}
 
-async def calculate_all_sci_scores() -> list[SCIScore]:
-    """Run the full SCI calculation pipeline for all configured apps."""
+
+async def calculate_all_sci_scores() -> tuple[list[SCIScore], dict]:
+    """Run the full SCI calculation pipeline for all configured apps.
+
+    Returns (scores, carbon_info) where carbon_info contains
+    region_name, source, index, and generation_mix from the intensity query.
+    """
     period_seconds = settings.calculation_interval_minutes * 60
     boundaries = settings.get_app_boundaries()
     request_jobs = settings.get_app_request_jobs()
@@ -22,8 +29,9 @@ async def calculate_all_sci_scores() -> list[SCIScore]:
     prom_client = PrometheusClient()
 
     # Step 1: Fetch current carbon intensity (shared across all apps)
-    carbon_intensity, carbon_source = await carbon_client.get_current_intensity()
-    logger.info("Carbon intensity: %.1f gCO2eq/kWh (%s)", carbon_intensity, carbon_source)
+    carbon_result = await carbon_client.get_current_intensity()
+    carbon_intensity = carbon_result.intensity
+    logger.info("Carbon intensity: %.1f gCO2eq/kWh (%s)", carbon_intensity, carbon_result.source)
 
     scores: list[SCIScore] = []
 
@@ -64,7 +72,18 @@ async def calculate_all_sci_scores() -> list[SCIScore]:
     # Step 4: Update Prometheus gauges
     _update_prometheus_gauges(scores, carbon_intensity)
 
-    return scores
+    carbon_info = {
+        "source": carbon_result.source,
+        "region_name": carbon_result.region_name,
+        "index": carbon_result.index,
+        "generation_mix": carbon_result.generation_mix,
+    }
+
+    # Cache for dashboard access
+    latest_carbon_info.clear()
+    latest_carbon_info.update(carbon_info)
+
+    return scores, carbon_info
 
 
 async def _calculate_app_sci(

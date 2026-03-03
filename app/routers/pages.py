@@ -9,6 +9,7 @@ from sqlalchemy.sql import func
 from app.config import settings
 from app.database import async_session
 from app.models import SCIScore
+from app.services.sci_calculator import latest_carbon_info
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -61,6 +62,7 @@ async def dashboard(request: Request):
             "scores": current_scores,
             "history_by_app": history_by_app,
             "app_names": list(settings.get_app_boundaries().keys()),
+            "carbon_info": latest_carbon_info,
         },
     )
 

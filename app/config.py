@@ -8,8 +8,9 @@ class Settings(BaseSettings):
     prometheus_url: str = "http://greenscope-prometheus:9090/prometheus"
 
     # UK Carbon Intensity API
-    carbon_intensity_api_url: str = "https://api.carbonintensity.org.uk/intensity"
+    carbon_intensity_api_url: str = "https://api.carbonintensity.org.uk"
     carbon_intensity_fallback: float = 230.0
+    datacenter_postcode: str = "SL1"  # DO LON1 = Equinix LD5, Slough
 
     # Host hardware configuration
     host_tdp_watts: float = 205.0

@@ -6,8 +6,9 @@ services:
       - "8002:8000"
     environment:
       - GREENSCOPE_PROMETHEUS_URL=http://greenscope-prometheus:9090
-      - GREENSCOPE_CARBON_INTENSITY_API_URL=https://api.carbonintensity.org.uk/intensity
+      - GREENSCOPE_CARBON_INTENSITY_API_URL=https://api.carbonintensity.org.uk
       - GREENSCOPE_CARBON_INTENSITY_FALLBACK=230.0
+      - GREENSCOPE_DATACENTER_POSTCODE=SL1
       - GREENSCOPE_HOST_TDP_WATTS=205
       - GREENSCOPE_HOST_CORES=2
       - GREENSCOPE_HOST_PUE=1.2

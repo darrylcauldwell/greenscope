@@ -21,8 +21,29 @@
         </svg>
     </div>
     <div>
-        <div class="text-sm font-medium" style="color: var(--text-secondary);">UK Grid Carbon Intensity</div>
-        <div class="text-2xl font-bold">{{ "%.0f"|format(scores[0].carbon_intensity) }} <span class="text-sm font-normal" style="color: var(--text-secondary);">gCO2eq/kWh</span></div>
+        <div class="text-sm font-medium" style="color: var(--text-secondary);">
+            Grid Carbon Intensity{% if carbon_info.get('region_name') %} — {{ carbon_info['region_name'] }}{% endif %}
+        </div>
+        <div class="text-2xl font-bold">
+            {{ "%.0f"|format(scores[0].carbon_intensity) }}
+            <span class="text-sm font-normal" style="color: var(--text-secondary);">gCO2eq/kWh</span>
+            {% if carbon_info.get('index') %}
+            <span class="text-xs ml-2 px-2 py-0.5 rounded-full
+                {% if carbon_info['index'] == 'very low' %}
+                    " style="background: #30D158; color: #000;">
+                {% elif carbon_info['index'] == 'low' %}
+                    " style="background: #86efac; color: #000;">
+                {% elif carbon_info['index'] == 'moderate' %}
+                    " style="background: #FF9F0A; color: #000;">
+                {% elif carbon_info['index'] == 'high' %}
+                    " style="background: #FF6B35; color: #fff;">
+                {% else %}
+                    " style="background: #FF453A; color: #fff;">
+                {% endif %}
+                {{ carbon_info['index'] }}
+            </span>
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endif %}
@@ -73,6 +94,19 @@
 </div>
 {% endif %}
 
+<!-- Generation Mix -->
+{% if carbon_info.get('generation_mix') %}
+<div class="card rounded-lg p-5 mb-6">
+    <h3 class="font-semibold mb-4">
+        Electricity Generation Mix{% if carbon_info.get('region_name') %} — {{ carbon_info['region_name'] }}{% endif %}
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+        <canvas id="genMixChart" height="200"></canvas>
+        <div id="genMixLegend" class="text-sm space-y-1" style="color: var(--text-secondary);"></div>
+    </div>
+</div>
+{% endif %}
+
 <!-- Charts -->
 {% if history_by_app %}
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -92,6 +126,54 @@
 {% endblock %}
 
 {% block scripts %}
+{% if carbon_info.get('generation_mix') %}
+<script>
+const genMixData = {{ carbon_info['generation_mix'] | tojson }};
+
+// Fuel type colours — low-carbon green, fossil brown/grey, other blue
+const fuelColours = {
+    biomass: '#8B5E3C', coal: '#4A4A4A', gas: '#A0522D', nuclear: '#9B59B6',
+    hydro: '#3498DB', solar: '#F1C40F', wind: '#2ECC71', imports: '#95A5A6',
+    other: '#BDC3C7',
+};
+
+const labels = genMixData.map(d => d.fuel.charAt(0).toUpperCase() + d.fuel.slice(1));
+const values = genMixData.map(d => d.perc);
+const bgColours = genMixData.map(d => fuelColours[d.fuel] || fuelColours.other);
+
+const genCtx = document.getElementById('genMixChart').getContext('2d');
+new Chart(genCtx, {
+    type: 'doughnut',
+    data: {
+        labels: labels,
+        datasets: [{
+            data: values,
+            backgroundColor: bgColours,
+            borderWidth: 0,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed.toFixed(1)}%` } }
+        }
+    }
+});
+
+// Custom legend with percentages
+const legendEl = document.getElementById('genMixLegend');
+genMixData.filter(d => d.perc > 0).sort((a, b) => b.perc - a.perc).forEach(d => {
+    const name = d.fuel.charAt(0).toUpperCase() + d.fuel.slice(1);
+    const colour = fuelColours[d.fuel] || fuelColours.other;
+    legendEl.innerHTML += `<div class="flex items-center gap-2">
+        <span class="inline-block w-3 h-3 rounded-full flex-shrink-0" style="background:${colour}"></span>
+        <span class="flex-1">${name}</span>
+        <span class="font-medium">${d.perc.toFixed(1)}%</span>
+    </div>`;
+});
+</script>
+{% endif %}
 {% if history_by_app %}
 <script>
 const historyData = {{ history_by_app | tojson }};
