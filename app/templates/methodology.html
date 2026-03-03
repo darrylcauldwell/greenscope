@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}GreenScope — Methodology{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <h1 class="text-3xl font-bold mb-2">Methodology</h1>
+    <p class="mb-8" style="color: var(--text-secondary);">
+        How GreenScope calculates Software Carbon Intensity scores, as required by the
+        <a href="https://sci-guide.greensoftware.foundation/" class="underline" style="color: var(--green-accent);">SCI Specification</a>.
+    </p>
+
+    <!-- SCI Formula -->
+    <section class="card rounded-lg p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-3">The SCI Formula</h2>
+        <div class="p-4 rounded font-mono text-center text-lg mb-4" style="background: var(--bg-secondary);">
+            SCI = ((E &times; I) + M) / R
+        </div>
+        <div class="space-y-2 text-sm" style="color: var(--text-secondary);">
+            <p><strong style="color: var(--text-primary);">E</strong> = Energy consumed by the software, in kWh</p>
+            <p><strong style="color: var(--text-primary);">I</strong> = Location-based marginal carbon intensity of the electricity grid, in gCO2eq/kWh</p>
+            <p><strong style="color: var(--text-primary);">M</strong> = Embodied emissions share (hardware manufacturing footprint), in gCO2e</p>
+            <p><strong style="color: var(--text-primary);">R</strong> = Functional unit — number of HTTP requests handled</p>
+        </div>
+        <p class="mt-3 text-sm" style="color: var(--text-secondary);">
+            The result is expressed in <strong>gCO2e per request</strong> — the carbon cost of a single HTTP request to the application.
+        </p>
+    </section>
+
+    <!-- Energy Estimation -->
+    <section class="card rounded-lg p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-3">Energy Estimation (E)</h2>
+        <div class="p-4 rounded font-mono text-sm mb-4" style="background: var(--bg-secondary);">
+            E = (cpu_seconds &times; (TDP / cores)) / 3,600,000 &times; PUE
+        </div>
+        <p class="text-sm mb-3" style="color: var(--text-secondary);">
+            CPU seconds are collected from Prometheus via cAdvisor's <code>container_cpu_usage_seconds_total</code> metric.
+            This is converted to energy using the host CPU's thermal design power (TDP).
+        </p>
+        <div class="text-sm space-y-1" style="color: var(--text-secondary);">
+            <p><strong>Configured values:</strong></p>
+            <ul class="list-disc list-inside ml-2">
+                <li>TDP: {{ settings.host_tdp_watts }}W</li>
+                <li>CPU cores: {{ settings.host_cores }}</li>
+                <li>PUE: {{ settings.host_pue }} (data center power overhead)</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Carbon Intensity -->
+    <section class="card rounded-lg p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-3">Carbon Intensity (I)</h2>
+        <p class="text-sm mb-3" style="color: var(--text-secondary);">
+            Real-time marginal carbon intensity for the UK electricity grid is fetched from the
+            <a href="https://carbonintensity.org.uk/" class="underline" style="color: var(--green-accent);">UK Carbon Intensity API</a>,
+            a free public API provided by National Grid ESO.
+        </p>
+        <div class="text-sm space-y-1" style="color: var(--text-secondary);">
+            <ul class="list-disc list-inside ml-2">
+                <li>Update frequency: every 30 minutes</li>
+                <li>Uses actual intensity when available, forecast otherwise</li>
+                <li>Fallback value: {{ settings.carbon_intensity_fallback }} gCO2eq/kWh (UK annual average) when API is unavailable</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Embodied Emissions -->
+    <section class="card rounded-lg p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-3">Embodied Emissions (M)</h2>
+        <div class="p-4 rounded font-mono text-sm mb-4" style="background: var(--bg-secondary);">
+            M = TE &times; TS &times; RS
+        </div>
+        <div class="text-sm space-y-2" style="color: var(--text-secondary);">
+            <p><strong>TE</strong> (Total Embodied Emissions) = {{ settings.host_embodied_co2_kg }} kgCO2e — the total manufacturing carbon footprint of the server hardware.</p>
+            <p><strong>TS</strong> (Time Share) = measurement period / server lifespan — the fraction of the hardware's life used in this period.</p>
+            <p><strong>RS</strong> (Resource Share) = app CPU seconds / total available CPU seconds — the fraction of hardware used by this app.</p>
+            <p><strong>Configured values:</strong></p>
+            <ul class="list-disc list-inside ml-2">
+                <li>Total embodied emissions: {{ settings.host_embodied_co2_kg }} kgCO2e</li>
+                <li>Expected lifespan: {{ settings.host_lifespan_years }} years</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Functional Unit -->
+    <section class="card rounded-lg p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-3">Functional Unit (R)</h2>
+        <p class="text-sm mb-3" style="color: var(--text-secondary);">
+            The functional unit is <strong>one HTTP request</strong>. Request counts are collected from Prometheus using
+            application-specific metrics:
+        </p>
+        <div class="text-sm space-y-1" style="color: var(--text-secondary);">
+            <ul class="list-disc list-inside ml-2">
+                <li>FastAPI apps: <code>http_request_duration_seconds_count</code> (via prometheus-fastapi-instrumentator)</li>
+                <li>Caddy (meWeb): <code>caddy_http_requests_total</code></li>
+            </ul>
+        </div>
+        <p class="text-sm mt-3" style="color: var(--text-secondary);">
+            HTTP requests were chosen as the functional unit because they represent the primary user-facing work performed
+            by these web applications and are already instrumented via Prometheus.
+        </p>
+    </section>
+
+    <!-- Software Boundaries -->
+    <section class="card rounded-lg p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-3">Software Boundaries</h2>
+        <p class="text-sm mb-3" style="color: var(--text-secondary);">
+            Each app's SCI score includes the CPU energy of its constituent containers:
+        </p>
+        <div class="space-y-2">
+            {% for app_name, containers in boundaries.items() %}
+            <div class="p-3 rounded text-sm" style="background: var(--bg-secondary);">
+                <strong class="capitalize">{{ app_name }}</strong>:
+                <span style="color: var(--text-secondary);">
+                    {% for c in containers %}
+                    <code>{{ c }}</code>{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+        <p class="text-sm mt-3" style="color: var(--text-secondary);">
+            <strong>Excluded:</strong> Shared infrastructure (Prometheus, Grafana, Loki, Promtail, cAdvisor, GreenScope itself)
+            is not attributed to individual apps. These are observability services that serve the platform as a whole.
+        </p>
+    </section>
+
+    <!-- Limitations -->
+    <section class="card rounded-lg p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-3">Limitations &amp; Accuracy</h2>
+        <div class="text-sm space-y-2" style="color: var(--text-secondary);">
+            <ul class="list-disc list-inside ml-2 space-y-1">
+                <li><strong>CPU-only energy estimate:</strong> Only CPU energy is modelled. Memory, storage, and network energy are not included. For these workloads, CPU is the dominant energy consumer.</li>
+                <li><strong>TDP-based estimation:</strong> Energy is estimated using TDP as a proxy for per-core power. Actual power draw varies with utilisation, temperature, and frequency. This is an overestimate at low utilisation.</li>
+                <li><strong>Shared hardware:</strong> The host runs multiple apps. Embodied emissions are allocated proportionally by CPU time, which may not perfectly reflect actual hardware wear.</li>
+                <li><strong>Network excluded:</strong> Energy consumed by network infrastructure (switches, routers, CDN) between the server and end user is not included.</li>
+                <li><strong>Client-side excluded:</strong> Energy consumed by the user's device to render the page is not included.</li>
+                <li><strong>Measurement interval:</strong> Calculations run every {{ settings.calculation_interval_minutes }} minutes. Short-lived spikes within a period are averaged out.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <section class="card rounded-lg p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-3">Contact</h2>
+        <p class="text-sm" style="color: var(--text-secondary);">
+            GreenScope is built by <a href="https://dreamfold.dev" class="underline" style="color: var(--green-accent);">Darryl Cauldwell</a>.
+            For questions about this methodology, please visit <a href="https://dreamfold.dev" class="underline" style="color: var(--green-accent);">dreamfold.dev</a>.
+        </p>
+    </section>
+</div>
+{% endblock %}
