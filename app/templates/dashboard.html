@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}GreenScope — Dashboard{% endblock %}
+
+{% block head %}
+<meta http-equiv="refresh" content="300">
+{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h1 class="text-2xl font-bold mb-1">Software Carbon Intensity Dashboard</h1>
+    <p style="color: var(--text-secondary);">Real-time SCI scores for dreamfold.dev applications</p>
+</div>
+
+<!-- Carbon Intensity Card -->
+{% if scores %}
+<div class="card rounded-lg p-4 mb-6 flex items-center gap-4">
+    <div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center" style="background: var(--green-light);">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="color: var(--green-accent);">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+    </div>
+    <div>
+        <div class="text-sm font-medium" style="color: var(--text-secondary);">UK Grid Carbon Intensity</div>
+        <div class="text-2xl font-bold">{{ "%.0f"|format(scores[0].carbon_intensity) }} <span class="text-sm font-normal" style="color: var(--text-secondary);">gCO2eq/kWh</span></div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Per-App SCI Score Cards -->
+{% if scores %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+    {% for score in scores %}
+    <div class="card rounded-lg p-5">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="font-semibold text-lg capitalize">{{ score.app_name }}</h3>
+            <span class="text-xs px-2 py-1 rounded-full" style="background: var(--green-light); color: var(--green-dark);">
+                {{ score.request_count }} reqs
+            </span>
+        </div>
+        <div class="text-4xl font-bold mb-3" style="color: var(--green-accent);">
+            {% if score.sci_score > 0 %}
+                {{ "%.4f"|format(score.sci_score) }}
+            {% else %}
+                &mdash;
+            {% endif %}
+            <span class="text-sm font-normal" style="color: var(--text-secondary);">gCO2e/req</span>
+        </div>
+        <div class="space-y-1 text-sm" style="color: var(--text-secondary);">
+            <div class="flex justify-between">
+                <span>Energy (E)</span>
+                <span>{{ "%.6f"|format(score.energy_kwh) }} kWh</span>
+            </div>
+            <div class="flex justify-between">
+                <span>Operational (O)</span>
+                <span>{{ "%.4f"|format(score.operational_emissions) }} gCO2e</span>
+            </div>
+            <div class="flex justify-between">
+                <span>Embodied (M)</span>
+                <span>{{ "%.4f"|format(score.embodied_emissions) }} gCO2e</span>
+            </div>
+            <div class="flex justify-between font-medium" style="color: var(--text-primary);">
+                <span>Total (C)</span>
+                <span>{{ "%.4f"|format(score.total_carbon) }} gCO2e</span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card rounded-lg p-8 text-center mb-8">
+    <p class="text-lg" style="color: var(--text-secondary);">No SCI data yet. The first calculation will run shortly after startup.</p>
+</div>
+{% endif %}
+
+<!-- Charts -->
+{% if history_by_app %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- SCI Trend Chart -->
+    <div class="card rounded-lg p-5">
+        <h3 class="font-semibold mb-4">SCI Score Trend (24h)</h3>
+        <canvas id="sciTrendChart" height="200"></canvas>
+    </div>
+
+    <!-- Energy Breakdown Chart -->
+    <div class="card rounded-lg p-5">
+        <h3 class="font-semibold mb-4">Emissions Breakdown</h3>
+        <canvas id="emissionsChart" height="200"></canvas>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if history_by_app %}
+<script>
+const historyData = {{ history_by_app | tojson }};
+const appNames = {{ app_names | tojson }};
+const colours = ['#30D158', '#5AC8FA', '#FF9F0A', '#FF453A', '#BF5AF2', '#64D2FF'];
+
+// SCI Trend Chart
+const trendCtx = document.getElementById('sciTrendChart').getContext('2d');
+const trendDatasets = appNames.map((app, i) => {
+    const data = (historyData[app] || []).map(d => ({
+        x: new Date(d.timestamp),
+        y: d.sci_score
+    }));
+    return {
+        label: app,
+        data: data,
+        borderColor: colours[i % colours.length],
+        backgroundColor: colours[i % colours.length] + '20',
+        tension: 0.3,
+        fill: false,
+        pointRadius: 2,
+    };
+});
+
+new Chart(trendCtx, {
+    type: 'line',
+    data: { datasets: trendDatasets },
+    options: {
+        responsive: true,
+        scales: {
+            x: { type: 'time', time: { unit: 'hour' }, grid: { color: 'rgba(128,128,128,0.1)' } },
+            y: { title: { display: true, text: 'gCO2e/request' }, grid: { color: 'rgba(128,128,128,0.1)' } }
+        },
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+
+// Emissions Breakdown Chart
+const emissionsCtx = document.getElementById('emissionsChart').getContext('2d');
+const latestData = appNames.map(app => {
+    const history = historyData[app] || [];
+    return history.length > 0 ? history[history.length - 1] : null;
+}).filter(Boolean);
+
+new Chart(emissionsCtx, {
+    type: 'bar',
+    data: {
+        labels: appNames.filter(app => (historyData[app] || []).length > 0),
+        datasets: [
+            {
+                label: 'Operational (O)',
+                data: latestData.map(d => d.operational_emissions),
+                backgroundColor: '#30D158',
+            },
+            {
+                label: 'Embodied (M)',
+                data: latestData.map(d => d.embodied_emissions),
+                backgroundColor: '#5AC8FA',
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            x: { stacked: true, grid: { color: 'rgba(128,128,128,0.1)' } },
+            y: { stacked: true, title: { display: true, text: 'gCO2e' }, grid: { color: 'rgba(128,128,128,0.1)' } }
+        },
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}
