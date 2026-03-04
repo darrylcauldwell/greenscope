@@ -101,6 +101,7 @@ async def dashboard(request: Request):
             "carbon_info": latest_carbon_info,
             "display_names": settings.get_app_display_names(),
             "boundaries": boundaries,
+            "calc_interval_minutes": settings.calculation_interval_minutes,
         },
     )
 
