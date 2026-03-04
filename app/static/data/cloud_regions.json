@@ -1,0 +1,751 @@
+[
+  {
+    "provider": "AWS",
+    "region": "af-south-1",
+    "location": "Africa (Cape Town)",
+    "carbon_intensity": 890.2,
+    "pue": 1.24
+  },
+  {
+    "provider": "AWS",
+    "region": "ap-east-1",
+    "location": "Asia Pacific (Hong Kong)",
+    "carbon_intensity": 486.4,
+    "pue": null
+  },
+  {
+    "provider": "AWS",
+    "region": "ap-northeast-1",
+    "location": "Asia Pacific (Tokyo)",
+    "carbon_intensity": 536.0,
+    "pue": 1.28
+  },
+  {
+    "provider": "AWS",
+    "region": "ap-northeast-2",
+    "location": "Asia Pacific (Seoul)",
+    "carbon_intensity": 686.0,
+    "pue": null
+  },
+  {
+    "provider": "AWS",
+    "region": "ap-northeast-3",
+    "location": "Asia Pacific (Osaka)",
+    "carbon_intensity": 551.0,
+    "pue": null
+  },
+  {
+    "provider": "AWS",
+    "region": "ap-south-1",
+    "location": "Asia Pacific (Mumbai)",
+    "carbon_intensity": 679.0,
+    "pue": 1.45
+  },
+  {
+    "provider": "AWS",
+    "region": "ap-south-2",
+    "location": "Asia Pacific (Hyderabad)",
+    "carbon_intensity": 679.0,
+    "pue": 1.5
+  },
+  {
+    "provider": "AWS",
+    "region": "ap-southeast-1",
+    "location": "Asia Pacific (Singapore)",
+    "carbon_intensity": 409.0,
+    "pue": 1.27
+  },
+  {
+    "provider": "AWS",
+    "region": "ap-southeast-2",
+    "location": "Asia Pacific (Sydney)",
+    "carbon_intensity": 770.0,
+    "pue": 1.15
+  },
+  {
+    "provider": "AWS",
+    "region": "ap-southeast-3",
+    "location": "Asia Pacific (Jakarta)",
+    "carbon_intensity": 779.1,
+    "pue": 1.35
+  },
+  {
+    "provider": "AWS",
+    "region": "ap-southeast-4",
+    "location": "Asia Pacific (Melbourne)",
+    "carbon_intensity": 665.0,
+    "pue": 1.08
+  },
+  {
+    "provider": "AWS",
+    "region": "ca-central-1",
+    "location": "Canada (Central)",
+    "carbon_intensity": 462.0,
+    "pue": 1.18
+  },
+  {
+    "provider": "AWS",
+    "region": "cn-north-1",
+    "location": "China (Beijing)",
+    "carbon_intensity": 843.6,
+    "pue": null
+  },
+  {
+    "provider": "AWS",
+    "region": "cn-northwest-1",
+    "location": "China (Ningxia)",
+    "carbon_intensity": 843.6,
+    "pue": 1.26
+  },
+  {
+    "provider": "AWS",
+    "region": "eu-central-1",
+    "location": "Europe (Frankfurt)",
+    "carbon_intensity": 742.0,
+    "pue": 1.34
+  },
+  {
+    "provider": "AWS",
+    "region": "eu-central-2",
+    "location": "Europe (Zurich)",
+    "carbon_intensity": 779.0,
+    "pue": null
+  },
+  {
+    "provider": "AWS",
+    "region": "eu-north-1",
+    "location": "Europe (Stockholm)",
+    "carbon_intensity": 782.0,
+    "pue": 1.12
+  },
+  {
+    "provider": "AWS",
+    "region": "eu-south-1",
+    "location": "Europe (Milan)",
+    "carbon_intensity": 386.0,
+    "pue": null
+  },
+  {
+    "provider": "AWS",
+    "region": "eu-south-2",
+    "location": "Europe (Spain)",
+    "carbon_intensity": 370.0,
+    "pue": 1.11
+  },
+  {
+    "provider": "AWS",
+    "region": "eu-west-1",
+    "location": "Europe (Ireland)",
+    "carbon_intensity": 508.0,
+    "pue": 1.1
+  },
+  {
+    "provider": "AWS",
+    "region": "eu-west-2",
+    "location": "Europe (London)",
+    "carbon_intensity": 428.0,
+    "pue": null
+  },
+  {
+    "provider": "AWS",
+    "region": "eu-west-3",
+    "location": "Europe (Paris)",
+    "carbon_intensity": 384.0,
+    "pue": null
+  },
+  {
+    "provider": "AWS",
+    "region": "il-central-1",
+    "location": "Israel (Tel Aviv)",
+    "carbon_intensity": 497.1,
+    "pue": null
+  },
+  {
+    "provider": "AWS",
+    "region": "me-central-1",
+    "location": "Middle East (UAE)",
+    "carbon_intensity": 416.6,
+    "pue": 1.36
+  },
+  {
+    "provider": "AWS",
+    "region": "me-south-1",
+    "location": "Middle East (Bahrain)",
+    "carbon_intensity": 413.7,
+    "pue": 1.32
+  },
+  {
+    "provider": "AWS",
+    "region": "sa-east-1",
+    "location": "South America (S\u00e3o Paulo)",
+    "carbon_intensity": 571.0,
+    "pue": 1.18
+  },
+  {
+    "provider": "AWS",
+    "region": "us-east-1",
+    "location": "US East (N. Virginia)",
+    "carbon_intensity": 565.0,
+    "pue": 1.14
+  },
+  {
+    "provider": "AWS",
+    "region": "us-east-2",
+    "location": "US East (Ohio)",
+    "carbon_intensity": 565.0,
+    "pue": 1.12
+  },
+  {
+    "provider": "AWS",
+    "region": "us-gov-east-1",
+    "location": "GovCloud (US East)",
+    "carbon_intensity": 565.0,
+    "pue": null
+  },
+  {
+    "provider": "AWS",
+    "region": "us-gov-west-1",
+    "location": "GovCloud (US West)",
+    "carbon_intensity": 427.0,
+    "pue": null
+  },
+  {
+    "provider": "AWS",
+    "region": "us-west-1",
+    "location": "US West (N. California)",
+    "carbon_intensity": 393.0,
+    "pue": 1.17
+  },
+  {
+    "provider": "AWS",
+    "region": "us-west-2",
+    "location": "US West (Oregon)",
+    "carbon_intensity": 427.0,
+    "pue": 1.13
+  },
+  {
+    "provider": "Azure",
+    "region": "asiapacific",
+    "location": "Indonesia",
+    "carbon_intensity": 779.1,
+    "pue": null
+  },
+  {
+    "provider": "Azure",
+    "region": "australiaeast",
+    "location": "Australia East",
+    "carbon_intensity": 727.6,
+    "pue": null
+  },
+  {
+    "provider": "Azure",
+    "region": "australiasoutheast",
+    "location": "Australia Southeast",
+    "carbon_intensity": 548.1,
+    "pue": null
+  },
+  {
+    "provider": "Azure",
+    "region": "austriaeast",
+    "location": "Austria East",
+    "carbon_intensity": 632.0,
+    "pue": 1.12
+  },
+  {
+    "provider": "Azure",
+    "region": "brazilsouth",
+    "location": "Brazil",
+    "carbon_intensity": 571.0,
+    "pue": 1.12
+  },
+  {
+    "provider": "Azure",
+    "region": "centralus",
+    "location": "Iowa: Central US",
+    "carbon_intensity": 585.9,
+    "pue": 1.16
+  },
+  {
+    "provider": "Azure",
+    "region": "denmarkeast",
+    "location": "Denmark",
+    "carbon_intensity": 660.0,
+    "pue": 1.16
+  },
+  {
+    "provider": "Azure",
+    "region": "eastus",
+    "location": "Virginia: East US",
+    "carbon_intensity": 557.2,
+    "pue": 1.14
+  },
+  {
+    "provider": "Azure",
+    "region": "eastus2",
+    "location": "Virginia: East US 2",
+    "carbon_intensity": 557.2,
+    "pue": 1.14
+  },
+  {
+    "provider": "Azure",
+    "region": "eastus3",
+    "location": "Georgia: East US 3",
+    "carbon_intensity": 534.0,
+    "pue": 1.12
+  },
+  {
+    "provider": "Azure",
+    "region": "greececentral",
+    "location": "Greece Central",
+    "carbon_intensity": 438.0,
+    "pue": 1.12
+  },
+  {
+    "provider": "Azure",
+    "region": "indiasouthcentral",
+    "location": "India South Central",
+    "carbon_intensity": 679.0,
+    "pue": 1.43
+  },
+  {
+    "provider": "Azure",
+    "region": "italynorth",
+    "location": "Italy North",
+    "carbon_intensity": 386.0,
+    "pue": 1.12
+  },
+  {
+    "provider": "Azure",
+    "region": "mexicocentral",
+    "location": "Mexico Central",
+    "carbon_intensity": 422.0,
+    "pue": 1.12
+  },
+  {
+    "provider": "Azure",
+    "region": "newzealandnorth",
+    "location": "New Zealand",
+    "carbon_intensity": 704.7,
+    "pue": null
+  },
+  {
+    "provider": "Azure",
+    "region": "northcentralus",
+    "location": "Illinois: North Central US",
+    "carbon_intensity": 628.9,
+    "pue": 1.35
+  },
+  {
+    "provider": "Azure",
+    "region": "northeurope",
+    "location": "Ireland",
+    "carbon_intensity": 785.0,
+    "pue": 1.225
+  },
+  {
+    "provider": "Azure",
+    "region": "polandcentral",
+    "location": "Poland Central",
+    "carbon_intensity": 852.0,
+    "pue": 1.12
+  },
+  {
+    "provider": "Azure",
+    "region": "southcentralus",
+    "location": "Texas: South Central US",
+    "carbon_intensity": 518.6,
+    "pue": 1.28
+  },
+  {
+    "provider": "Azure",
+    "region": "southeastasia",
+    "location": "Singapore",
+    "carbon_intensity": 409.0,
+    "pue": 1.322
+  },
+  {
+    "provider": "Azure",
+    "region": "spaincentral",
+    "location": "Spain Central",
+    "carbon_intensity": 370.0,
+    "pue": 1.12
+  },
+  {
+    "provider": "Azure",
+    "region": "swedencentral",
+    "location": "Sweden",
+    "carbon_intensity": 782.0,
+    "pue": 1.148
+  },
+  {
+    "provider": "Azure",
+    "region": "taiwannorth",
+    "location": "Taiwan",
+    "carbon_intensity": 551.9,
+    "pue": null
+  },
+  {
+    "provider": "Azure",
+    "region": "westcentralus",
+    "location": "Wyoming: West Central US",
+    "carbon_intensity": 905.9,
+    "pue": 1.11
+  },
+  {
+    "provider": "Azure",
+    "region": "westeurope",
+    "location": "Netherlands",
+    "carbon_intensity": 487.0,
+    "pue": 1.122
+  },
+  {
+    "provider": "Azure",
+    "region": "westus",
+    "location": "Washington: West US",
+    "carbon_intensity": 427.0,
+    "pue": 1.144
+  },
+  {
+    "provider": "Azure",
+    "region": "westus3",
+    "location": "Arizona: west US 3",
+    "carbon_intensity": 532.7,
+    "pue": 1.18
+  },
+  {
+    "provider": "DO",
+    "region": "AMS3",
+    "location": "Amsterdam, Netherlands",
+    "carbon_intensity": 487.0,
+    "pue": 1.5
+  },
+  {
+    "provider": "DO",
+    "region": "BLR1",
+    "location": "Bangalore, India",
+    "carbon_intensity": 630.0,
+    "pue": 1.5
+  },
+  {
+    "provider": "DO",
+    "region": "FRA1",
+    "location": "Frankfurt, Germany",
+    "carbon_intensity": 742.0,
+    "pue": 1.5
+  },
+  {
+    "provider": "DO",
+    "region": "LON1",
+    "location": "London, UK",
+    "carbon_intensity": 428.0,
+    "pue": 1.2
+  },
+  {
+    "provider": "DO",
+    "region": "NYC1",
+    "location": "New York, USA",
+    "carbon_intensity": 280.0,
+    "pue": 1.5
+  },
+  {
+    "provider": "DO",
+    "region": "SFO3",
+    "location": "San Francisco, USA",
+    "carbon_intensity": 210.0,
+    "pue": 1.5
+  },
+  {
+    "provider": "DO",
+    "region": "SGP1",
+    "location": "Singapore",
+    "carbon_intensity": 409.0,
+    "pue": 1.5
+  },
+  {
+    "provider": "DO",
+    "region": "SYD1",
+    "location": "Sydney, Australia",
+    "carbon_intensity": 770.0,
+    "pue": 1.5
+  },
+  {
+    "provider": "DO",
+    "region": "TOR1",
+    "location": "Toronto, Canada",
+    "carbon_intensity": 357.0,
+    "pue": 1.5
+  },
+  {
+    "provider": "GCP",
+    "region": "africa-south1",
+    "location": "Johannesburg",
+    "carbon_intensity": 890.2,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "asia-east1",
+    "location": "Taiwan",
+    "carbon_intensity": 551.9,
+    "pue": 1.12
+  },
+  {
+    "provider": "GCP",
+    "region": "asia-east2",
+    "location": "Hong Kong",
+    "carbon_intensity": 486.4,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "asia-northeast1",
+    "location": "Tokyo",
+    "carbon_intensity": 536.0,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "asia-northeast2",
+    "location": "Osaka",
+    "carbon_intensity": 551.0,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "asia-northeast3",
+    "location": "Seoul",
+    "carbon_intensity": 686.0,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "asia-south1",
+    "location": "Mumbai",
+    "carbon_intensity": 679.0,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "asia-south2",
+    "location": "Delhi",
+    "carbon_intensity": 679.0,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "asia-southeast1",
+    "location": "Singapore",
+    "carbon_intensity": 409.0,
+    "pue": 1.12
+  },
+  {
+    "provider": "GCP",
+    "region": "asia-southeast2",
+    "location": "Jakarta",
+    "carbon_intensity": 779.1,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "australia-southeast1",
+    "location": "Sydney",
+    "carbon_intensity": 770.0,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "australia-southeast2",
+    "location": "Melbourne",
+    "carbon_intensity": 665.0,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "europe-central2",
+    "location": "Warsaw",
+    "carbon_intensity": 852.0,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "europe-north1",
+    "location": "Finland",
+    "carbon_intensity": 785.0,
+    "pue": 1.09
+  },
+  {
+    "provider": "GCP",
+    "region": "europe-southwest1",
+    "location": "Madrid",
+    "carbon_intensity": 370.0,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "europe-west1",
+    "location": "Belgium",
+    "carbon_intensity": 411.0,
+    "pue": 1.09
+  },
+  {
+    "provider": "GCP",
+    "region": "europe-west12",
+    "location": "Turin",
+    "carbon_intensity": 386.0,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "europe-west2",
+    "location": "London",
+    "carbon_intensity": 428.0,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "europe-west3",
+    "location": "Frankfurt",
+    "carbon_intensity": 742.0,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "europe-west4",
+    "location": "Eemshaven",
+    "carbon_intensity": 487.0,
+    "pue": 1.07
+  },
+  {
+    "provider": "GCP",
+    "region": "europe-west6",
+    "location": "Zurich",
+    "carbon_intensity": 915.5,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "europe-west8",
+    "location": "Milan",
+    "carbon_intensity": 386.0,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "europe-west9",
+    "location": "Paris",
+    "carbon_intensity": 384.0,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "me-central1",
+    "location": "Doha",
+    "carbon_intensity": 461.2,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "me-central2",
+    "location": "Damman",
+    "carbon_intensity": 511.3,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "me-west1",
+    "location": "Tel Aviv",
+    "carbon_intensity": 497.1,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "northamerica-northeast1",
+    "location": "Montr\u00e9al",
+    "carbon_intensity": 462.0,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "northamerica-northeast2",
+    "location": "Toronto",
+    "carbon_intensity": 357.0,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "southamerica-east1",
+    "location": "S\u00e3o Paulo",
+    "carbon_intensity": 571.0,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "southamerica-west1",
+    "location": "Santiago",
+    "carbon_intensity": 616.0,
+    "pue": 1.15
+  },
+  {
+    "provider": "GCP",
+    "region": "us-central1",
+    "location": "Iowa",
+    "carbon_intensity": 539.0,
+    "pue": 1.09
+  },
+  {
+    "provider": "GCP",
+    "region": "us-east1",
+    "location": "South Carolina",
+    "carbon_intensity": 728.0,
+    "pue": 1.1
+  },
+  {
+    "provider": "GCP",
+    "region": "us-east4",
+    "location": "Northern Virginia",
+    "carbon_intensity": 565.0,
+    "pue": 1.1
+  },
+  {
+    "provider": "GCP",
+    "region": "us-east5",
+    "location": "Columbus",
+    "carbon_intensity": 565.0,
+    "pue": 1.05
+  },
+  {
+    "provider": "GCP",
+    "region": "us-south1",
+    "location": "Dallas",
+    "carbon_intensity": 441.0,
+    "pue": 1.1
+  },
+  {
+    "provider": "GCP",
+    "region": "us-west1",
+    "location": "Oregon",
+    "carbon_intensity": 427.0,
+    "pue": 1.04
+  },
+  {
+    "provider": "GCP",
+    "region": "us-west2",
+    "location": "Los Angeles",
+    "carbon_intensity": 501.0,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "us-west3",
+    "location": "Salt Lake City",
+    "carbon_intensity": 664.0,
+    "pue": null
+  },
+  {
+    "provider": "GCP",
+    "region": "us-west4",
+    "location": "Las Vegas",
+    "carbon_intensity": 457.0,
+    "pue": 1.07
+  }
+]
