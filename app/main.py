@@ -9,7 +9,7 @@ from pythonjsonlogger.json import JsonFormatter
 
 from app.config import settings
 from app.database import init_db
-from app.routers import health, pages, sci
+from app.routers import health, pages, sci, whatif
 from app.services.scheduler import start_scheduler, stop_scheduler
 
 # JSON structured logging
@@ -54,4 +54,5 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 # Routers
 app.include_router(health.router)
 app.include_router(sci.router)
+app.include_router(whatif.router)
 app.include_router(pages.router)

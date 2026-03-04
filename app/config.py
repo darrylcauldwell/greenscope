@@ -8,8 +8,9 @@ class Settings(BaseSettings):
     prometheus_url: str = "http://greenscope-prometheus:9090/prometheus"
 
     # UK Carbon Intensity API
-    carbon_intensity_api_url: str = "https://api.carbonintensity.org.uk/intensity"
+    carbon_intensity_api_url: str = "https://api.carbonintensity.org.uk"
     carbon_intensity_fallback: float = 230.0
+    datacenter_postcode: str = "SL1"  # DO LON1 = Equinix LD5, Slough
 
     # Host hardware configuration
     host_tdp_watts: float = 205.0
@@ -19,10 +20,13 @@ class Settings(BaseSettings):
     host_lifespan_years: float = 4.0
 
     # App boundaries — JSON string mapping app name to container names
-    app_boundaries: str = '{"evm": ["evm-backend", "evm-frontend", "evm-db"], "equicalendar": ["compgather"], "meweb": ["caddy"]}'
+    app_boundaries: str = '{"evm": ["evm-backend", "evm-frontend", "evm-db"], "equicalendar": ["equicalendar"], "planespotter": ["planespotter-api", "planespotter-frontend", "planespotter-sync", "planespotter-db", "planespotter-cache"], "meweb": ["meweb"], "greenscope": ["greenscope"]}'
 
     # App request jobs — JSON string mapping app name to Prometheus job name
-    app_request_jobs: str = '{"evm": "evm-backend", "equicalendar": "compgather", "meweb": "caddy"}'
+    app_request_jobs: str = '{"evm": "evm-backend", "equicalendar": "equicalendar", "planespotter": "planespotter-api", "meweb": "meweb", "greenscope": "greenscope"}'
+
+    # App display names — JSON string mapping internal name to friendly name
+    app_display_names: str = '{"evm": "Equestrian Venue Manager", "equicalendar": "EquiCalendar", "planespotter": "Planespotter", "meweb": "dreamfold.dev", "greenscope": "GreenScope"}'
 
     # Calculation interval
     calculation_interval_minutes: int = 15
@@ -40,6 +44,9 @@ class Settings(BaseSettings):
 
     def get_app_request_jobs(self) -> dict[str, str]:
         return json.loads(self.app_request_jobs)
+
+    def get_app_display_names(self) -> dict[str, str]:
+        return json.loads(self.app_display_names)
 
 
 settings = Settings()

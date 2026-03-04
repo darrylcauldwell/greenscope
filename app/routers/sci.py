@@ -4,9 +4,11 @@ from fastapi import APIRouter, Query
 from sqlalchemy import select
 from sqlalchemy.sql import func
 
+from app.config import settings
 from app.database import async_session
 from app.models import SCIScore
-from app.schemas import SCIComponent, SCICurrentResponse, SCIHistoryResponse
+from app.schemas import GenerationMixEntry, SCIComponent, SCICurrentResponse, SCIHistoryResponse
+from app.services.sci_calculator import latest_carbon_info
 
 router = APIRouter(prefix="/api/sci", tags=["sci"])
 
@@ -14,10 +16,13 @@ router = APIRouter(prefix="/api/sci", tags=["sci"])
 @router.get("/current", response_model=SCICurrentResponse)
 async def get_current_sci():
     """Get the latest SCI score for each monitored app."""
+    configured_apps = list(settings.get_app_boundaries().keys())
+
     async with async_session() as session:
-        # Subquery: latest timestamp per app
+        # Subquery: latest timestamp per app — only configured apps
         latest_subq = (
             select(SCIScore.app_name, func.max(SCIScore.timestamp).label("max_ts"))
+            .where(SCIScore.app_name.in_(configured_apps))
             .group_by(SCIScore.app_name)
             .subquery()
         )
@@ -31,16 +36,26 @@ async def get_current_sci():
         result = await session.execute(query)
         scores = result.scalars().all()
 
+    generation_mix = [
+        GenerationMixEntry(**entry) for entry in latest_carbon_info.get("generation_mix", [])
+    ]
+
     if not scores:
         return SCICurrentResponse(
             scores=[],
-            carbon_intensity_source="No data yet",
+            carbon_intensity_source=latest_carbon_info.get("source", "No data yet"),
+            carbon_intensity_region=latest_carbon_info.get("region_name", ""),
+            carbon_intensity_index=latest_carbon_info.get("index", ""),
+            generation_mix=generation_mix,
             calculated_at=datetime.now(timezone.utc),
         )
 
     return SCICurrentResponse(
         scores=[SCIComponent.model_validate(s) for s in scores],
-        carbon_intensity_source=f"{scores[0].carbon_intensity} gCO2eq/kWh",
+        carbon_intensity_source=latest_carbon_info.get("source", f"{scores[0].carbon_intensity} gCO2eq/kWh"),
+        carbon_intensity_region=latest_carbon_info.get("region_name", ""),
+        carbon_intensity_index=latest_carbon_info.get("index", ""),
+        generation_mix=generation_mix,
         calculated_at=scores[0].timestamp,
     )
 

@@ -19,9 +19,17 @@ class SCIComponent(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class GenerationMixEntry(BaseModel):
+    fuel: str
+    perc: float
+
+
 class SCICurrentResponse(BaseModel):
     scores: list[SCIComponent]
     carbon_intensity_source: str
+    carbon_intensity_region: str = ""
+    carbon_intensity_index: str = ""
+    generation_mix: list[GenerationMixEntry] = []
     calculated_at: datetime
 
 
