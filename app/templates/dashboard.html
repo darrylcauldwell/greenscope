@@ -43,8 +43,20 @@
 
 {% block content %}
 <div class="mb-6">
-    <h1 class="text-2xl font-bold mb-1">Software Carbon Intensity Dashboard</h1>
-    <p style="color: var(--text-secondary);">Real-time SCI scores for dreamfold.dev applications</p>
+    <div class="flex items-center justify-between flex-wrap gap-3">
+        <div>
+            <h1 class="text-2xl font-bold mb-1">Software Carbon Intensity Dashboard</h1>
+            <p style="color: var(--text-secondary);">Real-time SCI scores for dreamfold.dev applications</p>
+        </div>
+        <select id="timeRangeSelect" onchange="switchTimeRange(this.value)"
+            class="rounded-lg px-3 py-2 text-sm"
+            style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border);">
+            <option value="15">Last 15 minutes</option>
+            <option value="60">Last 1 hour</option>
+            <option value="360">Last 6 hours</option>
+            <option value="1440">Last 24 hours</option>
+        </select>
+    </div>
 </div>
 
 <!-- Electricity Grid -->
@@ -91,6 +103,7 @@
 {% endif %}
 
 <!-- Droplet-Level SCI Summary -->
+<div id="dropletSection">
 {% if droplet %}
 <div class="card rounded-lg p-5 mb-6">
     <div class="flex items-center justify-between mb-1">
@@ -98,7 +111,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="color: var(--green-accent);">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2" />
             </svg>
-            <h3 class="font-semibold text-lg">Droplet Total</h3>
+            <h3 class="font-semibold text-lg">Droplet Total <span class="text-xs font-normal" style="color: var(--text-secondary);">(last {{ calc_interval_minutes }}m)</span></h3>
         </div>
         <span class="text-xs px-2 py-1 rounded-full" style="background: var(--green-light); color: var(--green-dark);">
             {{ droplet.container_count }} containers
@@ -133,14 +146,16 @@
     </div>
 </div>
 {% endif %}
+</div>
 
 <!-- Per-App SCI Score Cards -->
+<div id="appCardsSection">
 {% if scores %}
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
     {% for score in scores %}
     <div class="card rounded-lg p-5">
         <div class="flex items-center justify-between mb-1">
-            <h3 class="font-semibold text-lg">{{ display_names.get(score.app_name, score.app_name) }}</h3>
+            <h3 class="font-semibold text-lg">{{ display_names.get(score.app_name, score.app_name) }} <span class="text-xs font-normal" style="color: var(--text-secondary);">(last {{ calc_interval_minutes }}m)</span></h3>
             <span class="text-xs px-2 py-1 rounded-full" style="background: var(--green-light); color: var(--green-dark);">
                 {{ score.request_count }} reqs
             </span>
@@ -180,6 +195,7 @@
     <p class="text-lg" style="color: var(--text-secondary);">No SCI data yet. The first calculation will run shortly after startup.</p>
 </div>
 {% endif %}
+</div>
 
 <!-- Charts -->
 {% if history_by_app %}
@@ -191,8 +207,8 @@
     </div>
 
     <!-- Energy Breakdown Chart -->
-    <div class="card rounded-lg p-5">
-        <h3 class="font-semibold mb-4">Emissions Breakdown</h3>
+    <div class="card rounded-lg p-5" id="emissionsChartCard">
+        <h3 class="font-semibold mb-4" id="emissionsChartTitle">Emissions Breakdown <span class="text-xs font-normal" style="color: var(--text-secondary);">(last {{ calc_interval_minutes }}m)</span></h3>
         <canvas id="emissionsChart" height="200"></canvas>
     </div>
 </div>
@@ -275,38 +291,178 @@ new Chart(trendCtx, {
 });
 
 // Emissions Breakdown Chart
-const emissionsCtx = document.getElementById('emissionsChart').getContext('2d');
+let emissionsChartInstance = null;
+
+function renderEmissionsChart(scores, displayNames, windowLabel) {
+    const canvas = document.getElementById('emissionsChart');
+    if (!canvas) return;
+    if (emissionsChartInstance) emissionsChartInstance.destroy();
+
+    const titleEl = document.getElementById('emissionsChartTitle');
+    if (titleEl) {
+        titleEl.innerHTML = `Emissions Breakdown <span class="text-xs font-normal" style="color: var(--text-secondary);">(${windowLabel})</span>`;
+    }
+
+    emissionsChartInstance = new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: scores.map(s => displayNames[s.app_name] || s.app_name),
+            datasets: [
+                {
+                    label: 'Operational (O)',
+                    data: scores.map(s => s.operational_emissions),
+                    backgroundColor: '#30D158',
+                },
+                {
+                    label: 'Embodied (M)',
+                    data: scores.map(s => s.embodied_emissions),
+                    backgroundColor: '#5AC8FA',
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { stacked: true, grid: { color: 'rgba(128,128,128,0.1)' } },
+                y: { stacked: true, title: { display: true, text: 'gCO2e' }, grid: { color: 'rgba(128,128,128,0.1)' } }
+            },
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+}
+
+// Initial render from SSR data
 const latestData = appNames.map(app => {
     const history = historyData[app] || [];
-    return history.length > 0 ? history[history.length - 1] : null;
+    if (history.length === 0) return null;
+    const d = history[history.length - 1];
+    return { app_name: app, operational_emissions: d.operational_emissions, embodied_emissions: d.embodied_emissions };
 }).filter(Boolean);
 
-new Chart(emissionsCtx, {
-    type: 'bar',
-    data: {
-        labels: appNames.filter(app => (historyData[app] || []).length > 0).map(app => displayNames[app] || app),
-        datasets: [
-            {
-                label: 'Operational (O)',
-                data: latestData.map(d => d.operational_emissions),
-                backgroundColor: '#30D158',
-            },
-            {
-                label: 'Embodied (M)',
-                data: latestData.map(d => d.embodied_emissions),
-                backgroundColor: '#5AC8FA',
-            }
-        ]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            x: { stacked: true, grid: { color: 'rgba(128,128,128,0.1)' } },
-            y: { stacked: true, title: { display: true, text: 'gCO2e' }, grid: { color: 'rgba(128,128,128,0.1)' } }
-        },
-        plugins: { legend: { position: 'bottom' } }
-    }
-});
+renderEmissionsChart(latestData, displayNames, 'last {{ calc_interval_minutes }}m');
 </script>
 {% endif %}
+
+<script>
+const windowLabels = { 15: 'last 15m', 60: 'last 1h', 360: 'last 6h', 1440: 'last 24h' };
+
+function fmt(value, decimals) {
+    return Number(value).toFixed(decimals);
+}
+
+function renderDroplet(droplet, allContainers, windowLabel) {
+    const el = document.getElementById('dropletSection');
+    if (!droplet) { el.innerHTML = ''; return; }
+    const containerTags = allContainers.map(c =>
+        `<span class="text-xs px-2 py-0.5 rounded-full" style="background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border);">${c}</span>`
+    ).join('');
+    el.innerHTML = `
+    <div class="card rounded-lg p-5 mb-6">
+        <div class="flex items-center justify-between mb-1">
+            <div class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="color: var(--green-accent);">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2" />
+                </svg>
+                <h3 class="font-semibold text-lg">Droplet Total <span class="text-xs font-normal" style="color: var(--text-secondary);">(${windowLabel})</span></h3>
+            </div>
+            <span class="text-xs px-2 py-1 rounded-full" style="background: var(--green-light); color: var(--green-dark);">
+                ${droplet.container_count} containers
+            </span>
+        </div>
+        <div class="flex flex-wrap gap-1 mb-3">${containerTags}</div>
+        <div class="space-y-1 text-sm" style="color: var(--text-secondary);">
+            <div class="flex justify-between">
+                <span class="flex items-center">Energy (E)<span class="info-tip" data-tip="CPU energy in kWh — live CPU-seconds from Prometheus × configured TDP (205W) and PUE (1.2)">i</span></span>
+                <span>${fmt(droplet.energy_kwh, 6)} kWh</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="flex items-center">Operational (O)<span class="info-tip" data-tip="E × carbon intensity — both values are live (energy from Prometheus, CI from National Grid ESO every 5 min)">i</span></span>
+                <span>${fmt(droplet.operational_emissions, 4)} gCO2e</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="flex items-center">Embodied (M)<span class="info-tip" data-tip="Hardware manufacturing emissions — estimated from a reference server (1,206 kgCO2e over 4 yr lifespan), scaled by live CPU share. DO doesn't publish actual embodied figures.">i</span></span>
+                <span>${fmt(droplet.embodied_emissions, 4)} gCO2e</span>
+            </div>
+            <div class="flex justify-between font-medium" style="color: var(--text-primary);">
+                <span class="flex items-center">Total (C)<span class="info-tip" data-tip="Total carbon = O + M — combines live operational emissions with hardware embodied share">i</span></span>
+                <span>${fmt(droplet.total_carbon, 4)} gCO2e</span>
+            </div>
+            <div class="flex justify-between pt-1 mt-1" style="border-top: 1px solid var(--border);">
+                <span class="flex items-center font-semibold" style="color: var(--green-accent);">SCI (C/N)<span class="info-tip" data-tip="Software Carbon Intensity = C ÷ N — grams of CO2e per container, where N is the number of containers on this droplet">i</span></span>
+                <span class="font-semibold" style="color: var(--green-accent);">${droplet.sci_score > 0 ? fmt(droplet.sci_score, 4) : '—'} gCO2e/container</span>
+            </div>
+        </div>
+    </div>`;
+}
+
+function renderAppCards(scores, displayNames, boundaries, windowLabel) {
+    const el = document.getElementById('appCardsSection');
+    if (!scores || scores.length === 0) {
+        el.innerHTML = `<div class="card rounded-lg p-8 text-center mb-8">
+            <p class="text-lg" style="color: var(--text-secondary);">No SCI data for this time window.</p>
+        </div>`;
+        return;
+    }
+    const cards = scores.map(score => {
+        const name = displayNames[score.app_name] || score.app_name;
+        const containers = (boundaries[score.app_name] || []).map(c =>
+            `<span class="text-xs px-2 py-0.5 rounded-full" style="background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border);">${c}</span>`
+        ).join('');
+        return `
+        <div class="card rounded-lg p-5">
+            <div class="flex items-center justify-between mb-1">
+                <h3 class="font-semibold text-lg">${name} <span class="text-xs font-normal" style="color: var(--text-secondary);">(${windowLabel})</span></h3>
+                <span class="text-xs px-2 py-1 rounded-full" style="background: var(--green-light); color: var(--green-dark);">
+                    ${score.request_count} reqs
+                </span>
+            </div>
+            <div class="flex flex-wrap gap-1 mb-3">${containers}</div>
+            <div class="space-y-1 text-sm" style="color: var(--text-secondary);">
+                <div class="flex justify-between">
+                    <span class="flex items-center">Energy (E)<span class="info-tip" data-tip="CPU energy in kWh — live CPU-seconds from Prometheus × configured TDP (205W) and PUE (1.2)">i</span></span>
+                    <span>${fmt(score.energy_kwh, 6)} kWh</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="flex items-center">Operational (O)<span class="info-tip" data-tip="E × carbon intensity — both values are live (energy from Prometheus, CI from National Grid ESO every 5 min)">i</span></span>
+                    <span>${fmt(score.operational_emissions, 4)} gCO2e</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="flex items-center">Embodied (M)<span class="info-tip" data-tip="Hardware manufacturing emissions — estimated from a reference server (1,206 kgCO2e over 4 yr lifespan), scaled by live CPU share. DO doesn't publish actual embodied figures.">i</span></span>
+                    <span>${fmt(score.embodied_emissions, 4)} gCO2e</span>
+                </div>
+                <div class="flex justify-between font-medium" style="color: var(--text-primary);">
+                    <span class="flex items-center">Total (C)<span class="info-tip" data-tip="Total carbon = O + M — combines live operational emissions with hardware embodied share">i</span></span>
+                    <span>${fmt(score.total_carbon, 4)} gCO2e</span>
+                </div>
+                <div class="flex justify-between pt-1 mt-1" style="border-top: 1px solid var(--border);">
+                    <span class="flex items-center font-semibold" style="color: var(--green-accent);">SCI (C/R)<span class="info-tip" data-tip="Software Carbon Intensity = C ÷ R — grams of CO2e per HTTP request, where R is live request count from Prometheus">i</span></span>
+                    <span class="font-semibold" style="color: var(--green-accent);">${score.sci_score > 0 ? fmt(score.sci_score, 4) : '—'} gCO2e/req</span>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+    el.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">${cards}</div>`;
+}
+
+async function switchTimeRange(minutes) {
+    const windowLabel = windowLabels[minutes] || `last ${minutes}m`;
+    try {
+        const resp = await fetch(`/api/sci/aggregated?minutes=${minutes}`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+
+        // Collect all containers from boundaries
+        const allContainers = Object.values(data.boundaries).flat();
+
+        renderDroplet(data.droplet, allContainers, windowLabel);
+        renderAppCards(data.scores, data.display_names, data.boundaries, windowLabel);
+
+        if (typeof renderEmissionsChart === 'function') {
+            renderEmissionsChart(data.scores, data.display_names, windowLabel);
+        }
+    } catch (err) {
+        console.error('Failed to fetch aggregated data:', err);
+    }
+}
+</script>
 {% endblock %}
