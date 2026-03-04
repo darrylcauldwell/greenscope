@@ -29,8 +29,8 @@ app/static/css/output.css
 .DS_Store
 Thumbs.db
 
-# Docker
-data/
+# Docker volumes
+/data/
 
 # Testing
 .pytest_cache/
