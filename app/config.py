@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     app_boundaries: str = '{"evm": ["evm-backend", "evm-frontend", "evm-db"], "equicalendar": ["equicalendar"], "planespotter": ["planespotter-api", "planespotter-frontend", "planespotter-sync", "planespotter-db", "planespotter-cache"], "meweb": ["meweb"], "greenscope": ["greenscope"]}'
 
     # App request jobs — JSON string mapping app name to Prometheus job name
-    app_request_jobs: str = '{"evm": "evm-backend", "equicalendar": "equicalendar", "planespotter": "planespotter-api", "meweb": "meweb", "greenscope": "greenscope"}'
+    app_request_jobs: str = '{"evm": "evm-backend", "equicalendar": "equicalendar", "planespotter": "planespotter-api", "meweb": "caddy", "greenscope": "greenscope"}'
 
     # App display names — JSON string mapping internal name to friendly name
     app_display_names: str = '{"evm": "Equestrian Venue Manager", "equicalendar": "EquiCalendar", "planespotter": "Planespotter", "meweb": "dreamfold.dev", "greenscope": "GreenScope"}'
