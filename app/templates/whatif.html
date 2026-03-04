@@ -1,0 +1,342 @@
+{% extends "base.html" %}
+
+{% block title %}GreenScope — What If{% endblock %}
+
+{% block head %}
+<style>
+    .tab-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-secondary);
+        transition: all 0.15s;
+    }
+    .tab-btn.active {
+        background: var(--green-accent);
+        color: #000;
+        border-color: var(--green-accent);
+    }
+    .filter-btn {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-secondary);
+        transition: all 0.15s;
+    }
+    .filter-btn.active {
+        background: var(--green-accent);
+        color: #000;
+        border-color: var(--green-accent);
+    }
+    .sort-header {
+        cursor: pointer;
+        user-select: none;
+    }
+    .sort-header:hover {
+        color: var(--green-accent);
+    }
+    .current-row {
+        border-left: 3px solid var(--green-accent);
+        background: rgba(48, 209, 88, 0.05);
+    }
+    .best-row {
+        border-left: 3px solid #5AC8FA;
+        background: rgba(90, 200, 250, 0.05);
+    }
+    .delta-positive { color: #FF453A; }
+    .delta-negative { color: var(--green-accent); }
+    .delta-zero { color: var(--text-secondary); }
+    .badge {
+        font-size: 0.625rem;
+        padding: 0.125rem 0.375rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        vertical-align: middle;
+        margin-left: 0.375rem;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h1 class="text-2xl font-bold mb-1">What If — Cross-Cloud Comparison</h1>
+    <p style="color: var(--text-secondary);">What would your SCI score be on a different cloud provider or region?</p>
+</div>
+
+{% if not app_names %}
+<div class="card rounded-lg p-8 text-center">
+    <p class="text-lg" style="color: var(--text-secondary);">No SCI data yet. The first calculation will run shortly after startup.</p>
+</div>
+{% else %}
+
+<!-- Current Datacenter Card -->
+<div class="card rounded-lg p-4 mb-6" style="border-left: 3px solid var(--green-accent);" id="currentCard">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Left: datacenter info -->
+        <div>
+            <div class="text-sm font-medium mb-1" style="color: var(--text-secondary);">Current Datacenter</div>
+            <div class="text-lg font-bold">DO LON1 <span class="text-sm font-normal" style="color: var(--text-secondary);">— London, UK</span></div>
+            <div class="flex flex-wrap gap-4 text-sm mt-1" style="color: var(--text-secondary);">
+                <span id="currentCI"></span>
+                <span>PUE {{ "%.1f"|format(settings.host_pue) }}</span>
+            </div>
+        </div>
+        <!-- Right: live data highlight -->
+        <div class="flex items-center gap-3 md:justify-end">
+            <div class="text-right">
+                <div class="flex items-center gap-2 justify-end mb-1">
+                    <span class="inline-block w-2 h-2 rounded-full" style="background: var(--green-accent); animation: pulse 2s infinite;"></span>
+                    <span class="text-xs font-semibold" style="color: var(--green-accent);">LIVE</span>
+                    <span class="text-xs" style="color: var(--text-secondary);">
+                        {% if carbon_info.get('region_name') %}{{ carbon_info['region_name'] }}{% else %}UK Grid{% endif %}
+                    </span>
+                </div>
+                <div class="text-xs" style="color: var(--text-secondary);">
+                    Half-hourly carbon intensity from the UK National Grid.
+                    <br>Other regions use annual averages from the GSF dataset.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters row -->
+<div class="flex flex-wrap gap-x-6 gap-y-2 mb-4 items-center">
+    <!-- App selector + estimated indicator -->
+    <div class="flex gap-2 items-center">
+        <span class="text-sm" style="color: var(--text-secondary);">App:</span>
+        {% for name in app_names %}
+        <button class="tab-btn {% if name == active_app %}active{% endif %}"
+                data-app="{{ name }}"
+                onclick="switchApp('{{ name }}')">
+            {{ display_names.get(name, name) }}
+        </button>
+        {% endfor %}
+        <button class="tab-btn" id="estimatedBadge" style="display: none; cursor: default; opacity: 0.7;" title="Using a reference workload (1 vCPU-hour, 1000 requests). Relative comparison between regions is valid.">estimated</button>
+    </div>
+
+    <!-- Provider filter -->
+    <div class="flex gap-2 items-center">
+        <span class="text-sm" style="color: var(--text-secondary);">Cloud Provider:</span>
+        <button class="filter-btn active" data-provider="all" onclick="filterProvider('all')">All</button>
+        <button class="filter-btn" data-provider="DO" onclick="filterProvider('DO')">DO</button>
+        <button class="filter-btn" data-provider="AWS" onclick="filterProvider('AWS')">AWS</button>
+        <button class="filter-btn" data-provider="Azure" onclick="filterProvider('Azure')">Azure</button>
+        <button class="filter-btn" data-provider="GCP" onclick="filterProvider('GCP')">GCP</button>
+    </div>
+</div>
+
+<!-- Comparison Table -->
+<div class="card rounded-lg overflow-hidden mb-6">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm" id="comparisonTable">
+            <thead>
+                <tr style="background: var(--bg-secondary); border-bottom: 1px solid var(--border);">
+                    <th class="px-4 py-3 text-left sort-header" data-sort="rank" onclick="sortTable('rank')">#</th>
+                    <th class="px-4 py-3 text-left sort-header" data-sort="provider" onclick="sortTable('provider')">Provider</th>
+                    <th class="px-4 py-3 text-left sort-header" data-sort="region" onclick="sortTable('region')">Region</th>
+                    <th class="px-4 py-3 text-left sort-header" data-sort="location" onclick="sortTable('location')">Location</th>
+                    <th class="px-4 py-3 text-right sort-header" data-sort="carbon_intensity" onclick="sortTable('carbon_intensity')">CI (gCO2/kWh)</th>
+                    <th class="px-4 py-3 text-right sort-header" data-sort="pue" onclick="sortTable('pue')">PUE</th>
+                    <th class="px-4 py-3 text-right sort-header" data-sort="sci_score" onclick="sortTable('sci_score')">SCI (gCO2e/req)</th>
+                    <th class="px-4 py-3 text-right sort-header" data-sort="delta_percent" onclick="sortTable('delta_percent')">vs Current</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Summary Card -->
+<div class="card rounded-lg p-4 mb-4" id="summaryCard" style="display: none;">
+    <div class="flex items-center gap-3">
+        <div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style="background: var(--green-light);">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="color: var(--green-accent);">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </div>
+        <div>
+            <div class="text-sm font-medium" id="summaryText" style="color: var(--text-primary);"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Sources -->
+<div class="text-xs" style="color: var(--text-secondary);">
+    <strong>Data sources:</strong>
+    <a href="https://github.com/Green-Software-Foundation/real-time-cloud" class="underline" style="color: var(--green-accent);">GSF Real-Time Cloud</a> (annual avg CI &amp; PUE for AWS, Azure, GCP) |
+    <a href="https://carbonintensity.org.uk/" class="underline" style="color: var(--green-accent);">UK National Grid ESO</a> (live half-hourly CI for current datacenter) |
+    DO PUE estimated at 1.5 (colocation avg); LON1 configured at {{ "%.1f"|format(settings.host_pue) }}
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if app_names %}
+<script>
+const initialData = {{ initial_data | tojson }};
+let currentData = initialData;
+let currentFilter = 'all';
+let currentSort = { key: 'sci_score', ascending: true };
+
+function renderTable(data) {
+    const tbody = document.getElementById('tableBody');
+    const estimatedBadge = document.getElementById('estimatedBadge');
+
+    if (!data.regions || data.regions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center" style="color: var(--text-secondary);">No SCI data available for this app yet.</td></tr>';
+        document.getElementById('summaryCard').style.display = 'none';
+        document.getElementById('currentCI').textContent = '';
+        estimatedBadge.style.display = 'none';
+        return;
+    }
+
+    // Show/hide estimated badge inline with app tabs
+    estimatedBadge.style.display = data.estimated ? 'inline' : 'none';
+
+    // Update current CI display
+    if (data.current_carbon_intensity) {
+        const ciLabel = data.estimated ? ' gCO2/kWh (annual avg)' : ' gCO2/kWh (real-time)';
+        document.getElementById('currentCI').textContent = data.current_carbon_intensity.toFixed(0) + ciLabel;
+    }
+
+    // Apply filter
+    let regions = data.regions;
+    if (currentFilter !== 'all') {
+        regions = regions.filter(r => r.provider === currentFilter);
+    }
+
+    // Apply sort
+    regions = [...regions].sort((a, b) => {
+        let va = a[currentSort.key];
+        let vb = b[currentSort.key];
+        if (typeof va === 'string') {
+            va = va.toLowerCase();
+            vb = vb.toLowerCase();
+        }
+        if (va < vb) return currentSort.ascending ? -1 : 1;
+        if (va > vb) return currentSort.ascending ? 1 : -1;
+        return 0;
+    });
+
+    // Find the overall best region (lowest SCI with score > 0)
+    const allSorted = [...data.regions].filter(r => r.sci_score > 0)
+        .sort((a, b) => a.sci_score - b.sci_score);
+    const bestKey = allSorted.length > 0 ? allSorted[0].provider + allSorted[0].region : null;
+
+    // Build rows
+    let html = '';
+    regions.forEach((r, i) => {
+        const isBest = (r.provider + r.region) === bestKey;
+        let rowClass = '';
+        if (r.is_current) rowClass = 'current-row';
+        else if (isBest) rowClass = 'best-row';
+
+        const deltaClass = r.delta_percent < 0 ? 'delta-negative' : r.delta_percent > 0 ? 'delta-positive' : 'delta-zero';
+        const deltaText = r.is_current ? 'current' : (r.delta_percent > 0 ? '+' : '') + r.delta_percent.toFixed(1) + '%';
+        const sci = r.sci_score > 0 ? r.sci_score.toFixed(4) : '—';
+
+        // Badges for current datacenter and most efficient region
+        let regionBadge = '';
+        if (r.is_current && isBest) {
+            regionBadge = '<span class="badge" style="background: var(--green-accent); color: #000;">CURRENT &amp; BEST</span>';
+        } else if (r.is_current) {
+            regionBadge = '<span class="badge" style="background: var(--green-accent); color: #000;">CURRENT</span>';
+        } else if (isBest) {
+            regionBadge = '<span class="badge" style="background: #5AC8FA; color: #000;">MOST EFFICIENT</span>';
+        }
+
+        html += `<tr class="${rowClass}" style="border-bottom: 1px solid var(--border);">
+            <td class="px-4 py-2.5">${i + 1}</td>
+            <td class="px-4 py-2.5 font-medium">${r.provider}</td>
+            <td class="px-4 py-2.5"><code class="text-xs">${r.region}</code>${regionBadge}</td>
+            <td class="px-4 py-2.5">${r.location}</td>
+            <td class="px-4 py-2.5 text-right">${r.carbon_intensity.toFixed(0)}</td>
+            <td class="px-4 py-2.5 text-right">${r.pue.toFixed(2)}</td>
+            <td class="px-4 py-2.5 text-right font-medium">${sci}</td>
+            <td class="px-4 py-2.5 text-right ${deltaClass}">${deltaText}</td>
+        </tr>`;
+    });
+
+    tbody.innerHTML = html;
+
+    // Update summary
+    const greenest = data.greenest;
+    const summaryCard = document.getElementById('summaryCard');
+    const summaryText = document.getElementById('summaryText');
+    const estNote = data.estimated ? ' (estimated)' : '';
+    if (greenest && greenest.delta_percent < 0) {
+        summaryText.textContent =
+            `Most efficient: ${greenest.provider} ${greenest.region} (${greenest.location}) — ${Math.abs(greenest.delta_percent).toFixed(0)}% lower SCI${estNote}`;
+        summaryCard.style.display = 'block';
+    } else if (bestKey) {
+        // Current datacenter is already the most efficient
+        summaryText.textContent =
+            `Your current datacenter (DO LON1) is already the most efficient placement${estNote}`;
+        summaryCard.style.display = 'block';
+    } else {
+        summaryCard.style.display = 'none';
+    }
+
+    // Update sort indicators
+    document.querySelectorAll('.sort-header').forEach(th => {
+        const key = th.dataset.sort;
+        th.textContent = th.textContent.replace(/ [▲▼]$/, '');
+        if (key === currentSort.key) {
+            th.textContent += currentSort.ascending ? ' ▲' : ' ▼';
+        }
+    });
+}
+
+function switchApp(appName) {
+    // Update tab styling
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.app === appName);
+    });
+
+    // Fetch new data
+    fetch(`/api/whatif/compare?app_name=${encodeURIComponent(appName)}`)
+        .then(res => res.json())
+        .then(data => {
+            currentData = data;
+            renderTable(data);
+        });
+}
+
+function filterProvider(provider) {
+    currentFilter = provider;
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.provider === provider);
+    });
+    renderTable(currentData);
+}
+
+function sortTable(key) {
+    if (currentSort.key === key) {
+        currentSort.ascending = !currentSort.ascending;
+    } else {
+        currentSort.key = key;
+        currentSort.ascending = true;
+    }
+    renderTable(currentData);
+}
+
+// Initial render
+renderTable(initialData);
+</script>
+{% endif %}
+{% endblock %}

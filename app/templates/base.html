@@ -11,28 +11,38 @@
         :root {
             --green-accent: #30D158;
             --green-dark: #248A3D;
+            --green-light: #064e3b;
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-card: #1a1a1a;
+            --text-primary: rgba(255,255,255,0.87);
+            --text-secondary: rgba(255,255,255,0.6);
+            --border: rgba(255,255,255,0.15);
+        }
+        .light {
             --green-light: #D1FAE5;
             --bg-primary: #ffffff;
-            --bg-secondary: #f9fafb;
+            --bg-secondary: #f5f5f7;
             --bg-card: #ffffff;
-            --text-primary: #111827;
-            --text-secondary: #6b7280;
-            --border: #e5e7eb;
-        }
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-primary: #0f172a;
-                --bg-secondary: #1e293b;
-                --bg-card: #1e293b;
-                --text-primary: #f1f5f9;
-                --text-secondary: #94a3b8;
-                --border: #334155;
-                --green-light: #064e3b;
-            }
+            --text-primary: #1d1d1f;
+            --text-secondary: rgba(0,0,0,0.6);
+            --border: rgba(0,0,0,0.15);
         }
         body { background: var(--bg-primary); color: var(--text-primary); }
         .card { background: var(--bg-card); border: 1px solid var(--border); }
     </style>
+    <script>
+      (function() {
+        var savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+          document.documentElement.classList.add('light');
+        } else if (savedTheme === null) {
+          if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+            document.documentElement.classList.add('light');
+          }
+        }
+      })();
+    </script>
     {% block head %}{% endblock %}
 </head>
 <body class="min-h-screen font-sans">
@@ -44,9 +54,20 @@
                 </svg>
                 GreenScope
             </a>
-            <div class="flex gap-4 text-sm">
+            <div class="flex items-center gap-4 text-sm">
                 <a href="/" class="hover:underline" style="color: var(--text-secondary);">Dashboard</a>
+                <a href="/what-if" class="hover:underline" style="color: var(--text-secondary);">What If</a>
                 <a href="/methodology" class="hover:underline" style="color: var(--text-secondary);">Methodology</a>
+                <span style="color: var(--border);">|</span>
+                <a href="https://dreamfold.dev" class="hover:underline" style="color: var(--text-secondary);">dreamfold.dev</a>
+                <button id="theme-toggle" class="p-2 rounded-full transition-colors cursor-pointer" style="color: var(--text-secondary); touch-action: manipulation;" aria-label="Toggle theme" type="button">
+                    <svg id="sun-icon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <svg id="moon-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                    </svg>
+                </button>
             </div>
         </div>
     </nav>
@@ -61,5 +82,38 @@
     </footer>
 
     {% block scripts %}{% endblock %}
+
+    <script>
+      (function() {
+        var toggle = document.getElementById('theme-toggle');
+        var sunIcon = document.getElementById('sun-icon');
+        var moonIcon = document.getElementById('moon-icon');
+
+        function updateIcons(isLight) {
+          if (isLight) {
+            sunIcon.classList.add('hidden');
+            moonIcon.classList.remove('hidden');
+          } else {
+            sunIcon.classList.remove('hidden');
+            moonIcon.classList.add('hidden');
+          }
+        }
+
+        // Initialize icons based on current state
+        updateIcons(document.documentElement.classList.contains('light'));
+
+        toggle.addEventListener('click', function() {
+          var isLight = document.documentElement.classList.contains('light');
+          if (isLight) {
+            document.documentElement.classList.remove('light');
+            localStorage.setItem('theme', 'dark');
+          } else {
+            document.documentElement.classList.add('light');
+            localStorage.setItem('theme', 'light');
+          }
+          updateIcons(!isLight);
+        });
+      })();
+    </script>
 </body>
 </html>

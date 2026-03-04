@@ -4,6 +4,7 @@ from fastapi import APIRouter, Query
 from sqlalchemy import select
 from sqlalchemy.sql import func
 
+from app.config import settings
 from app.database import async_session
 from app.models import SCIScore
 from app.schemas import GenerationMixEntry, SCIComponent, SCICurrentResponse, SCIHistoryResponse
@@ -15,10 +16,13 @@ router = APIRouter(prefix="/api/sci", tags=["sci"])
 @router.get("/current", response_model=SCICurrentResponse)
 async def get_current_sci():
     """Get the latest SCI score for each monitored app."""
+    configured_apps = list(settings.get_app_boundaries().keys())
+
     async with async_session() as session:
-        # Subquery: latest timestamp per app
+        # Subquery: latest timestamp per app — only configured apps
         latest_subq = (
             select(SCIScore.app_name, func.max(SCIScore.timestamp).label("max_ts"))
+            .where(SCIScore.app_name.in_(configured_apps))
             .group_by(SCIScore.app_name)
             .subquery()
         )

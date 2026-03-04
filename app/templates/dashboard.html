@@ -12,37 +12,92 @@
     <p style="color: var(--text-secondary);">Real-time SCI scores for dreamfold.dev applications</p>
 </div>
 
-<!-- Carbon Intensity Card -->
-{% if scores %}
-<div class="card rounded-lg p-4 mb-6 flex items-center gap-4">
-    <div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center" style="background: var(--green-light);">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="color: var(--green-accent);">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-    </div>
-    <div>
-        <div class="text-sm font-medium" style="color: var(--text-secondary);">
-            Grid Carbon Intensity{% if carbon_info.get('region_name') %} — {{ carbon_info['region_name'] }}{% endif %}
+<!-- Electricity Grid -->
+{% if scores or carbon_info.get('generation_mix') %}
+<div class="card rounded-lg p-5 mb-6">
+    <div class="flex items-center gap-3 mb-3">
+        <div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style="background: var(--green-light);">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="color: var(--green-accent);">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
         </div>
-        <div class="text-2xl font-bold">
-            {{ "%.0f"|format(scores[0].carbon_intensity) }}
-            <span class="text-sm font-normal" style="color: var(--text-secondary);">gCO2eq/kWh</span>
-            {% if carbon_info.get('index') %}
-            <span class="text-xs ml-2 px-2 py-0.5 rounded-full
-                {% if carbon_info['index'] == 'very low' %}
-                    " style="background: #30D158; color: #000;">
-                {% elif carbon_info['index'] == 'low' %}
-                    " style="background: #86efac; color: #000;">
-                {% elif carbon_info['index'] == 'moderate' %}
-                    " style="background: #FF9F0A; color: #000;">
-                {% elif carbon_info['index'] == 'high' %}
-                    " style="background: #FF6B35; color: #fff;">
-                {% else %}
-                    " style="background: #FF453A; color: #fff;">
+        <div>
+            <h3 class="font-semibold text-lg">Electricity Grid{% if carbon_info.get('region_name') %} — {{ carbon_info['region_name'] }}{% endif %}</h3>
+            {% if scores %}
+            <div class="text-2xl font-bold">
+                {{ "%.0f"|format(scores[0].carbon_intensity) }}
+                <span class="text-sm font-normal" style="color: var(--text-secondary);">gCO2eq/kWh</span>
+                {% if carbon_info.get('index') %}
+                <span class="text-xs ml-2 px-2 py-0.5 rounded-full
+                    {% if carbon_info['index'] == 'very low' %}
+                        " style="background: #30D158; color: #000;">
+                    {% elif carbon_info['index'] == 'low' %}
+                        " style="background: #86efac; color: #000;">
+                    {% elif carbon_info['index'] == 'moderate' %}
+                        " style="background: #FF9F0A; color: #000;">
+                    {% elif carbon_info['index'] == 'high' %}
+                        " style="background: #FF6B35; color: #fff;">
+                    {% else %}
+                        " style="background: #FF453A; color: #fff;">
+                    {% endif %}
+                    {{ carbon_info['index'] }}
+                </span>
                 {% endif %}
-                {{ carbon_info['index'] }}
-            </span>
+            </div>
             {% endif %}
+        </div>
+    </div>
+    {% if carbon_info.get('generation_mix') %}
+    <div class="rounded-full overflow-hidden h-6 flex" id="genMixBar" style="background: var(--border);"></div>
+    <div class="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs" id="genMixLegend" style="color: var(--text-secondary);"></div>
+    {% endif %}
+    <p class="mt-3 text-xs" style="color: var(--text-secondary);">Pulled live every 5 minutes from the <a href="https://carbonintensity.org.uk/" class="underline" style="color: var(--green-accent);">National Grid ESO Carbon Intensity API</a> — the world's first open API for grid carbon intensity, combining fuel mix, weather, and demand data to forecast emissions every 30 minutes across 14 UK regions.</p>
+</div>
+{% endif %}
+
+<!-- Droplet-Level SCI Summary -->
+{% if droplet %}
+<div class="card rounded-lg p-5 mb-6">
+    <div class="flex items-center justify-between mb-1">
+        <div class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="color: var(--green-accent);">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2" />
+            </svg>
+            <h3 class="font-semibold text-lg">Droplet Total</h3>
+        </div>
+        <span class="text-xs px-2 py-1 rounded-full" style="background: var(--green-light); color: var(--green-dark);">
+            {{ droplet.request_count }} reqs
+        </span>
+    </div>
+    <div class="flex flex-wrap gap-1 mb-3">
+        {% for container in all_containers %}
+        <span class="text-xs px-2 py-0.5 rounded-full" style="background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border);">{{ container }}</span>
+        {% endfor %}
+    </div>
+    <div class="text-4xl font-bold mb-3" style="color: var(--green-accent);">
+        {% if droplet.sci_score > 0 %}
+            {{ "%.4f"|format(droplet.sci_score) }}
+        {% else %}
+            &mdash;
+        {% endif %}
+        <span class="text-sm font-normal" style="color: var(--text-secondary);">gCO2e/req</span>
+    </div>
+    <div class="space-y-1 text-sm" style="color: var(--text-secondary);">
+        <div class="flex justify-between">
+            <span>Energy (E)</span>
+            <span>{{ "%.6f"|format(droplet.energy_kwh) }} kWh</span>
+        </div>
+        <div class="flex justify-between">
+            <span>Operational (O)</span>
+            <span>{{ "%.4f"|format(droplet.operational_emissions) }} gCO2e</span>
+        </div>
+        <div class="flex justify-between">
+            <span>Embodied (M)</span>
+            <span>{{ "%.4f"|format(droplet.embodied_emissions) }} gCO2e</span>
+        </div>
+        <div class="flex justify-between font-medium" style="color: var(--text-primary);">
+            <span>Total (C)</span>
+            <span>{{ "%.4f"|format(droplet.total_carbon) }} gCO2e</span>
         </div>
     </div>
 </div>
@@ -53,11 +108,16 @@
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
     {% for score in scores %}
     <div class="card rounded-lg p-5">
-        <div class="flex items-center justify-between mb-3">
-            <h3 class="font-semibold text-lg capitalize">{{ score.app_name }}</h3>
+        <div class="flex items-center justify-between mb-1">
+            <h3 class="font-semibold text-lg">{{ display_names.get(score.app_name, score.app_name) }}</h3>
             <span class="text-xs px-2 py-1 rounded-full" style="background: var(--green-light); color: var(--green-dark);">
                 {{ score.request_count }} reqs
             </span>
+        </div>
+        <div class="flex flex-wrap gap-1 mb-3">
+            {% for container in boundaries.get(score.app_name, []) %}
+            <span class="text-xs px-2 py-0.5 rounded-full" style="background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border);">{{ container }}</span>
+            {% endfor %}
         </div>
         <div class="text-4xl font-bold mb-3" style="color: var(--green-accent);">
             {% if score.sci_score > 0 %}
@@ -94,19 +154,6 @@
 </div>
 {% endif %}
 
-<!-- Generation Mix -->
-{% if carbon_info.get('generation_mix') %}
-<div class="card rounded-lg p-5 mb-6">
-    <h3 class="font-semibold mb-4">
-        Electricity Generation Mix{% if carbon_info.get('region_name') %} — {{ carbon_info['region_name'] }}{% endif %}
-    </h3>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-        <canvas id="genMixChart" height="200"></canvas>
-        <div id="genMixLegend" class="text-sm space-y-1" style="color: var(--text-secondary);"></div>
-    </div>
-</div>
-{% endif %}
-
 <!-- Charts -->
 {% if history_by_app %}
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -126,51 +173,39 @@
 {% endblock %}
 
 {% block scripts %}
+<script>
+Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim();
+</script>
 {% if carbon_info.get('generation_mix') %}
 <script>
 const genMixData = {{ carbon_info['generation_mix'] | tojson }};
 
-// Fuel type colours — low-carbon green, fossil brown/grey, other blue
 const fuelColours = {
     biomass: '#8B5E3C', coal: '#4A4A4A', gas: '#A0522D', nuclear: '#9B59B6',
     hydro: '#3498DB', solar: '#F1C40F', wind: '#2ECC71', imports: '#95A5A6',
     other: '#BDC3C7',
 };
 
-const labels = genMixData.map(d => d.fuel.charAt(0).toUpperCase() + d.fuel.slice(1));
-const values = genMixData.map(d => d.perc);
-const bgColours = genMixData.map(d => fuelColours[d.fuel] || fuelColours.other);
-
-const genCtx = document.getElementById('genMixChart').getContext('2d');
-new Chart(genCtx, {
-    type: 'doughnut',
-    data: {
-        labels: labels,
-        datasets: [{
-            data: values,
-            backgroundColor: bgColours,
-            borderWidth: 0,
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: { display: false },
-            tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed.toFixed(1)}%` } }
-        }
-    }
-});
-
-// Custom legend with percentages
+// Build stacked horizontal bar
+const barEl = document.getElementById('genMixBar');
 const legendEl = document.getElementById('genMixLegend');
-genMixData.filter(d => d.perc > 0).sort((a, b) => b.perc - a.perc).forEach(d => {
+const sorted = [...genMixData].filter(d => d.perc > 0).sort((a, b) => b.perc - a.perc);
+
+sorted.forEach(d => {
     const name = d.fuel.charAt(0).toUpperCase() + d.fuel.slice(1);
     const colour = fuelColours[d.fuel] || fuelColours.other;
-    legendEl.innerHTML += `<div class="flex items-center gap-2">
-        <span class="inline-block w-3 h-3 rounded-full flex-shrink-0" style="background:${colour}"></span>
-        <span class="flex-1">${name}</span>
-        <span class="font-medium">${d.perc.toFixed(1)}%</span>
-    </div>`;
+
+    // Bar segment
+    const seg = document.createElement('div');
+    seg.style.cssText = `width:${d.perc}%;background:${colour};height:100%;transition:width 0.3s;`;
+    seg.title = `${name}: ${d.perc.toFixed(1)}%`;
+    barEl.appendChild(seg);
+
+    // Legend item
+    legendEl.innerHTML += `<span class="flex items-center gap-1">
+        <span class="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${colour}"></span>
+        ${name} <strong>${d.perc.toFixed(1)}%</strong>
+    </span>`;
 });
 </script>
 {% endif %}
@@ -178,6 +213,7 @@ genMixData.filter(d => d.perc > 0).sort((a, b) => b.perc - a.perc).forEach(d => 
 <script>
 const historyData = {{ history_by_app | tojson }};
 const appNames = {{ app_names | tojson }};
+const displayNames = {{ display_names | tojson }};
 const colours = ['#30D158', '#5AC8FA', '#FF9F0A', '#FF453A', '#BF5AF2', '#64D2FF'];
 
 // SCI Trend Chart
@@ -188,7 +224,7 @@ const trendDatasets = appNames.map((app, i) => {
         y: d.sci_score
     }));
     return {
-        label: app,
+        label: displayNames[app] || app,
         data: data,
         borderColor: colours[i % colours.length],
         backgroundColor: colours[i % colours.length] + '20',
@@ -221,7 +257,7 @@ const latestData = appNames.map(app => {
 new Chart(emissionsCtx, {
     type: 'bar',
     data: {
-        labels: appNames.filter(app => (historyData[app] || []).length > 0),
+        labels: appNames.filter(app => (historyData[app] || []).length > 0).map(app => displayNames[app] || app),
         datasets: [
             {
                 label: 'Operational (O)',
