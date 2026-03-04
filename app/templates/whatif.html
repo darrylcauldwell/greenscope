@@ -130,8 +130,8 @@
     <!-- Provider filter -->
     <div class="flex gap-2 items-center">
         <span class="text-sm" style="color: var(--text-secondary);">Cloud Provider:</span>
-        <button class="filter-btn active" data-provider="all" onclick="filterProvider('all')">All</button>
-        <button class="filter-btn" data-provider="DO" onclick="filterProvider('DO')">DO</button>
+        <button class="filter-btn" data-provider="all" onclick="filterProvider('all')">All</button>
+        <button class="filter-btn active" data-provider="DO" onclick="filterProvider('DO')">DO</button>
         <button class="filter-btn" data-provider="AWS" onclick="filterProvider('AWS')">AWS</button>
         <button class="filter-btn" data-provider="Azure" onclick="filterProvider('Azure')">Azure</button>
         <button class="filter-btn" data-provider="GCP" onclick="filterProvider('GCP')">GCP</button>
@@ -190,7 +190,7 @@
 <script>
 const initialData = {{ initial_data | tojson }};
 let currentData = initialData;
-let currentFilter = 'all';
+let currentFilter = 'DO';
 let currentSort = { key: 'sci_score', ascending: true };
 
 function renderTable(data) {

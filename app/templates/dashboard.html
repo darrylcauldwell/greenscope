@@ -4,6 +4,41 @@
 
 {% block head %}
 <meta http-equiv="refresh" content="300">
+<style>
+    .info-tip {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 1px solid var(--text-secondary);
+        font-size: 9px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        cursor: help;
+        margin-left: 4px;
+        flex-shrink: 0;
+    }
+    .info-tip:hover::after {
+        content: attr(data-tip);
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        color: var(--text-primary);
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 400;
+        white-space: nowrap;
+        z-index: 10;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -66,7 +101,7 @@
             <h3 class="font-semibold text-lg">Droplet Total</h3>
         </div>
         <span class="text-xs px-2 py-1 rounded-full" style="background: var(--green-light); color: var(--green-dark);">
-            {{ droplet.request_count }} reqs
+            {{ droplet.container_count }} containers
         </span>
     </div>
     <div class="flex flex-wrap gap-1 mb-3">
@@ -74,30 +109,26 @@
         <span class="text-xs px-2 py-0.5 rounded-full" style="background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border);">{{ container }}</span>
         {% endfor %}
     </div>
-    <div class="text-4xl font-bold mb-3" style="color: var(--green-accent);">
-        {% if droplet.sci_score > 0 %}
-            {{ "%.4f"|format(droplet.sci_score) }}
-        {% else %}
-            &mdash;
-        {% endif %}
-        <span class="text-sm font-normal" style="color: var(--text-secondary);">gCO2e/req</span>
-    </div>
     <div class="space-y-1 text-sm" style="color: var(--text-secondary);">
         <div class="flex justify-between">
-            <span>Energy (E)</span>
+            <span class="flex items-center">Energy (E)<span class="info-tip" data-tip="CPU energy in kWh — live CPU-seconds from Prometheus × configured TDP (205W) and PUE (1.2)">i</span></span>
             <span>{{ "%.6f"|format(droplet.energy_kwh) }} kWh</span>
         </div>
         <div class="flex justify-between">
-            <span>Operational (O)</span>
+            <span class="flex items-center">Operational (O)<span class="info-tip" data-tip="E × carbon intensity — both values are live (energy from Prometheus, CI from National Grid ESO every 5 min)">i</span></span>
             <span>{{ "%.4f"|format(droplet.operational_emissions) }} gCO2e</span>
         </div>
         <div class="flex justify-between">
-            <span>Embodied (M)</span>
+            <span class="flex items-center">Embodied (M)<span class="info-tip" data-tip="Hardware manufacturing emissions — estimated from a reference server (1,206 kgCO2e over 4 yr lifespan), scaled by live CPU share. DO doesn't publish actual embodied figures.">i</span></span>
             <span>{{ "%.4f"|format(droplet.embodied_emissions) }} gCO2e</span>
         </div>
         <div class="flex justify-between font-medium" style="color: var(--text-primary);">
-            <span>Total (C)</span>
+            <span class="flex items-center">Total (C)<span class="info-tip" data-tip="Total carbon = O + M — combines live operational emissions with hardware embodied share">i</span></span>
             <span>{{ "%.4f"|format(droplet.total_carbon) }} gCO2e</span>
+        </div>
+        <div class="flex justify-between pt-1 mt-1" style="border-top: 1px solid var(--border);">
+            <span class="flex items-center font-semibold" style="color: var(--green-accent);">SCI (C/N)<span class="info-tip" data-tip="Software Carbon Intensity = C ÷ N — grams of CO2e per container, where N is the number of containers on this droplet">i</span></span>
+            <span class="font-semibold" style="color: var(--green-accent);">{% if droplet.sci_score > 0 %}{{ "%.4f"|format(droplet.sci_score) }}{% else %}&mdash;{% endif %} gCO2e/container</span>
         </div>
     </div>
 </div>
@@ -119,30 +150,26 @@
             <span class="text-xs px-2 py-0.5 rounded-full" style="background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border);">{{ container }}</span>
             {% endfor %}
         </div>
-        <div class="text-4xl font-bold mb-3" style="color: var(--green-accent);">
-            {% if score.sci_score > 0 %}
-                {{ "%.4f"|format(score.sci_score) }}
-            {% else %}
-                &mdash;
-            {% endif %}
-            <span class="text-sm font-normal" style="color: var(--text-secondary);">gCO2e/req</span>
-        </div>
         <div class="space-y-1 text-sm" style="color: var(--text-secondary);">
             <div class="flex justify-between">
-                <span>Energy (E)</span>
+                <span class="flex items-center">Energy (E)<span class="info-tip" data-tip="CPU energy in kWh — live CPU-seconds from Prometheus × configured TDP (205W) and PUE (1.2)">i</span></span>
                 <span>{{ "%.6f"|format(score.energy_kwh) }} kWh</span>
             </div>
             <div class="flex justify-between">
-                <span>Operational (O)</span>
+                <span class="flex items-center">Operational (O)<span class="info-tip" data-tip="E × carbon intensity — both values are live (energy from Prometheus, CI from National Grid ESO every 5 min)">i</span></span>
                 <span>{{ "%.4f"|format(score.operational_emissions) }} gCO2e</span>
             </div>
             <div class="flex justify-between">
-                <span>Embodied (M)</span>
+                <span class="flex items-center">Embodied (M)<span class="info-tip" data-tip="Hardware manufacturing emissions — estimated from a reference server (1,206 kgCO2e over 4 yr lifespan), scaled by live CPU share. DO doesn't publish actual embodied figures.">i</span></span>
                 <span>{{ "%.4f"|format(score.embodied_emissions) }} gCO2e</span>
             </div>
             <div class="flex justify-between font-medium" style="color: var(--text-primary);">
-                <span>Total (C)</span>
+                <span class="flex items-center">Total (C)<span class="info-tip" data-tip="Total carbon = O + M — combines live operational emissions with hardware embodied share">i</span></span>
                 <span>{{ "%.4f"|format(score.total_carbon) }} gCO2e</span>
+            </div>
+            <div class="flex justify-between pt-1 mt-1" style="border-top: 1px solid var(--border);">
+                <span class="flex items-center font-semibold" style="color: var(--green-accent);">SCI (C/R)<span class="info-tip" data-tip="Software Carbon Intensity = C ÷ R — grams of CO2e per HTTP request, where R is live request count from Prometheus">i</span></span>
+                <span class="font-semibold" style="color: var(--green-accent);">{% if score.sci_score > 0 %}{{ "%.4f"|format(score.sci_score) }}{% else %}&mdash;{% endif %} gCO2e/req</span>
             </div>
         </div>
     </div>

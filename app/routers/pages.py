@@ -83,6 +83,12 @@ async def dashboard(request: Request):
     boundaries = settings.get_app_boundaries()
     all_containers = [c for containers in boundaries.values() for c in containers]
 
+    # Recompute droplet SCI using containers as the functional unit
+    if droplet and all_containers:
+        container_count = len(all_containers)
+        droplet["container_count"] = container_count
+        droplet["sci_score"] = droplet["total_carbon"] / container_count if container_count > 0 else 0
+
     return templates.TemplateResponse(
         "dashboard.html",
         {
